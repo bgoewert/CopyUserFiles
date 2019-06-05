@@ -59,7 +59,7 @@ argp.add_argument('-d', '--destination', type=str,
                   required=False)
 argp.add_argument('-u', '--username', type=str,
                   help='Set the user\'s name of the ' +
-                       'profile folder to copy from'.,
+                       'profile folder to copy from.',
                   action='store',
                   required=False)
 
