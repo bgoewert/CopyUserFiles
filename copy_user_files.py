@@ -29,21 +29,6 @@ from fnmatch import fnmatch
 
 __version__ = '1.1.0'
 
-folders = [
-    r'C:\Users\%s\Documents' % username,
-    r'C:\Users\%s\Desktop' % username,
-    r'C:\Users\%s\Favorites' % username,
-    r'C:\Users\%s\Pictures' % username,
-    r'C:\Users\%s\Videos' % username,
-    r'C:\Users\%s\AppData\Local\Microsoft\Outlook' % username,
-    r'C:\Users\%s\AppData\Roaming\Microsoft\Outlook' % username,
-    r'C:\Users\%s\AppData\Roaming\Microsoft\Outlook\RoamCache' % username,
-    r'C:\Users\%s\AppData\Roaming\Microsoft\Signatures' % username,
-    r'C:\Users\%s\AppData\Local\Mozilla\Firefox' % username,
-    r'C:\Users\%s\AppData\Roaming\Mozilla\Firefox' % username,
-    r'C:\Users\%s\AppData\Local\Google\Chrome' % username
-    ]
-
 log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         'copy_user_files.log')
 logging.basicConfig(level=logging.INFO,
@@ -67,17 +52,24 @@ argp.add_argument('-u', '--username', type=str,
 def getUserName(tries=0):
     username = None
 
-    args = argp.parse_args(sys.argv[1:])
-    if args.username is not None:
-        username = os.path.abspath(args.username)
-
+    args = argp.parse_known_args(sys.argv[1:])
+    print(args)
     if tries < 5:
-        if username is None:
-            username = os.path.abspath(input('Name of user folder: '))
-
-        if not os.path.isdir(username):
-            print('That was not a folder...')
-            getUserName(tries+1)
+        if args[0].username is not None:
+            username = args[0].username
+            homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
+            if not os.path.exists(homepath):
+                print('That was not a folder...')
+                print(homepath)
+                input('Try another user name...')
+                argparse.ArgumentParser.exit()
+        else:
+            username = input('Name of user folder: ')
+            homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
+            if not os.path.exists(homepath):
+                print('That was not a folder...')
+                print(homepath)
+                getUserName(tries+1)
     else:
         print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
         logging.warning('Too many attempts to define ' +
@@ -90,18 +82,21 @@ def getUserName(tries=0):
 def getUserDir(tries=0):
     userDir = None
 
-    args = argp.parse_args(sys.argv[1:])
-    if args.destination is not None:
-        userDir = os.path.abspath(args.destination)
+    args = argp.parse_known_args(sys.argv[1:])
 
     if tries < 5:
-        if userDir is None:
+        if args[0].destination is not None:
+            userDir = os.path.abspath(args[0].destination)
+            if os.path.isfile(userDir):
+                print('That was not a folder...')
+                argparse.ArgumentParser.exit()
+        else:
             userDir = os.path.abspath(input('Destination folder to copy' +
                                             ' user files/folders to: '))
-
-        if os.path.isfile(userDir):
-            print('That was not a folder...')
-            getUserDir(tries+1)
+            if os.path.isfile(userDir):
+                print('That was not a folder...')
+                print(userDir)
+                getUserDir(tries+1)
     else:
         print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
         logging.warning('Too many attempts to select ' +
@@ -146,8 +141,23 @@ def copy(src, dst):
 def app():
     print('\n* This script does not copy' +
           'anything from the downloads folder. *\n')
-    userDir = getUserDir()
     username = getUserName()
+    userDir = getUserDir()
+
+    folders = [
+        r'C:\Users\%s\Documents' % username,
+        r'C:\Users\%s\Desktop' % username,
+        r'C:\Users\%s\Favorites' % username,
+        r'C:\Users\%s\Pictures' % username,
+        r'C:\Users\%s\Videos' % username,
+        r'C:\Users\%s\AppData\Local\Microsoft\Outlook' % username,
+        r'C:\Users\%s\AppData\Roaming\Microsoft\Outlook' % username,
+        r'C:\Users\%s\AppData\Roaming\Microsoft\Outlook\RoamCache' % username,
+        r'C:\Users\%s\AppData\Roaming\Microsoft\Signatures' % username,
+        r'C:\Users\%s\AppData\Local\Mozilla\Firefox' % username,
+        r'C:\Users\%s\AppData\Roaming\Mozilla\Firefox' % username,
+        r'C:\Users\%s\AppData\Local\Google\Chrome' % username
+        ]
 
     for path in folders:
         path = os.path.abspath(path)
