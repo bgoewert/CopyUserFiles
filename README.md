@@ -5,6 +5,7 @@ This was made to copy important files and folders from a Windows user profile to
 ## Usage
 
 ### Command Line Arguments
+These cannot currently be used if using the executable.
 
 |Command            |Description                                                                                                |
 |-------------------|-----------------------------------------------------------------------------------------------------------|
