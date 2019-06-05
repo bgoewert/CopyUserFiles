@@ -29,8 +29,6 @@ from fnmatch import fnmatch
 
 __version__ = '1.0.0'
 
-username = os.getlogin()
-
 folders = [
     r'C:\Users\%s\Documents' % username,
     r'C:\Users\%s\Desktop' % username,
@@ -56,9 +54,37 @@ logging.basicConfig(level=logging.INFO,
 argp = argparse.ArgumentParser(description='Copies all the important ' +
                                'files and folders from the user profile.')
 argp.add_argument('-d', '--destination', type=str,
-                  help='Set the destination directory',
+                  help='Set the destination directory.',
                   action='store',
                   required=False)
+argp.add_argument('-u', '--username', type=str,
+                  help='Set the user\'s name of the ' +
+                       'profile folder to copy from'.,
+                  action='store',
+                  required=False)
+
+
+def getUserName(tries=0):
+    username = None
+
+    args = argp.parse_args(sys.argv[1:])
+    if args.username is not None:
+        username = os.path.abspath(args.username)
+
+    if tries < 5:
+        if username is None:
+            username = os.path.abspath(input('Name of user folder: '))
+
+        if not os.path.isdir(username):
+            print('That was not a folder...')
+            getUserName(tries+1)
+    else:
+        print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
+        logging.warning('Too many attempts to define ' +
+                        'a user folder.')
+        quit()
+    logging.info('User profile selected: %s' % username)
+    return username
 
 
 def getUserDir(tries=0):
@@ -121,6 +147,7 @@ def app():
     print('\n* This script does not copy' +
           'anything from the downloads folder. *\n')
     userDir = getUserDir()
+    username = getUserName()
 
     for path in folders:
         path = os.path.abspath(path)
