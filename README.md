@@ -5,13 +5,12 @@ This was made to copy important files and folders from a Windows user profile to
 ## Usage
 
 ### Command Line Arguments
+
 These cannot currently be used if using the executable.
 
 |Command            |Description                                                                                                |
 |-------------------|-----------------------------------------------------------------------------------------------------------|
 |-d, --destination  | Sets the destination directory (e.g. "C:\\User Folders"). Doing so will allow script to be run sliently.  |
-
-<br>
 
 ### Creating an Executable
 
@@ -19,6 +18,6 @@ These cannot currently be used if using the executable.
 
 This will create a single executable located in a dist folder that will be created after the PyInstaller .spec file is ran. Using this single executable does not require Python to be installed on a users computer.
 
-```
-pyinstaller imgResize.spec
+```shell
+~$ pyinstaller copy_user_files.spec
 ```
