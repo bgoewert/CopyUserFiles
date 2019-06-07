@@ -56,27 +56,30 @@ def getUserName(tries=0):
 
     args = argp.parse_known_args(sys.argv[1:])
     print(args)
-    if tries < 5:
-        if args[0].username is not None:
-            username = args[0].username
-            homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
-            if not os.path.exists(homepath):
-                print('That was not a folder...')
-                print(homepath)
-                input('Try another user name...')
-                argparse.ArgumentParser.exit()
+    try:
+        if tries < 5:
+            if args[0].username is not None:
+                username = args[0].username
+                homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
+                if not os.path.exists(homepath):
+                    print('That was not a folder...')
+                    print(homepath)
+                    input('Try another user name...')
+                    argparse.ArgumentParser.exit()
+            else:
+                username = input('Name of user folder: ')
+                homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
+                if not os.path.exists(homepath):
+                    print('That was not a folder...')
+                    print(homepath)
+                    getUserName(tries+1)
         else:
-            username = input('Name of user folder: ')
-            homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
-            if not os.path.exists(homepath):
-                print('That was not a folder...')
-                print(homepath)
-                getUserName(tries+1)
-    else:
-        print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
-        logging.warning('Too many attempts to define ' +
-                        'a user folder.')
+            print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
+            logging.warning('Too many attempts to define ' +
+                            'a user folder.')
         quit()
+    except KeyError:
+        logging.critical(str('Something bad just happened, check stacktrace to see the logs (＃ﾟДﾟ)').encode('utf-8'))
     logging.info('User profile selected: %s' % username)
     return username
 
