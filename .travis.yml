@@ -9,7 +9,8 @@ matrix:
 install:
   - python -m pip install --user --upgrade pip setuptools wheel
   - pip install --user -r requirements.txt
-  - C:\Users\travis\AppData\Roaming\Python\Python37\Scripts\pyinstaller copy_user_files.py
-  - C:\Users\travis\AppData\Roaming\Python\Python37\Scripts\pyinstaller copy_user_files.spec
+before_script:
+  - pyinstaller copy_user_files.py
+  - pyinstaller copy_user_files.spec
 script:
   - pytest copy_user_files.py
