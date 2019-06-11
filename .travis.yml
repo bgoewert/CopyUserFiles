@@ -8,8 +8,9 @@ matrix:
       env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
 install:
   - pip install -r requirements.txt
+  - pip install pytest
 before_script:
-  - pyinstaller copy_user_files.py
-  - pyinstaller copy_user_files.spec
+  - pyinstaller copy_user_files.py -y
+  - pyinstaller copy_user_files.spec -y
 script:
-  - pytest copy_user_files.py
+  - pytest copy_user_files.py -d _transfer -u travis
