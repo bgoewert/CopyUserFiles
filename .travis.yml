@@ -13,4 +13,4 @@ before_script:
   - pyinstaller copy_user_files.py -y
   - pyinstaller copy_user_files.spec -y
 script:
-  - pytest copy_user_files.py
+  - pytest copy_user_files.py -d _transfer -u travis
