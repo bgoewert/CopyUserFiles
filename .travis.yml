@@ -1,0 +1,15 @@
+language: python
+matrix:
+  include:
+    - name: "Python 3.7.3 on Windows"
+      os: windows
+      language: shell
+      before_install: choco install python
+      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+install:
+  - pip install -r requirements.txt
+before_script:
+  - pyinstaller copy_user_files.py
+  - pyinstaller copy_user_files.spec
+script:
+  - pytest copy_user_files.py
