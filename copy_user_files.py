@@ -29,91 +29,124 @@ import argparse
 import logging
 from fnmatch import fnmatch
 
-__version__ = '1.1.0'
+# Global vars
+__version__ = '1.2.0'
 
+# Logging
 log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         'copy_user_files.log')
 logging.basicConfig(level=logging.INFO,
                     filename=log_path,
-                    filemode='w',
+                    filemode='a',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%d-%m-%y %H:%M:%S')
+logging.getLogger().addHandler(logging.StreamHandler())
+
+# Command-line arguments
 argp = argparse.ArgumentParser(description='Copies all the important ' +
                                'files and folders from the user profile.')
+# Destination
 argp.add_argument('-d', '--destination', type=str,
                   help='Set the destination directory.',
                   action='store',
                   required=False)
+# Username
 argp.add_argument('-u', '--username', type=str,
                   help='Set the user\'s name of the ' +
                        'profile folder to copy from.',
                   action='store',
                   required=False)
 
-
+# Function to retrieves username from input
 def getUserName(tries=0):
+    logging.info('Attempting to retrieve username...')
     username = None
 
+    # Retrieving arguments
     args = argp.parse_known_args(sys.argv[1:])
-    print(args)
+    logging.info(args)
     try:
+        # 5 total attempts before quitting
         if tries < 5:
+
+            # Username is declared as an argument
             if args[0].username is not None:
+                logging.info('Username is declared as an argument!')
                 username = args[0].username
                 homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
                 if not os.path.exists(homepath):
-                    print('That was not a folder...')
-                    print(homepath)
+                    logging.warning('That was not a folder...')
+                    logging.warning('Folder:' + homepath)
                     input('Try another user name...')
                     argparse.ArgumentParser.exit()
+
+            # Username is not declared as an argument
             else:
+                logging.info('Prompting for user name...')
                 username = input('Name of user folder: ')
                 homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
                 if not os.path.exists(homepath):
-                    print('That was not a folder...')
-                    print(homepath)
+                    logging.warning('That was not a folder...')
+                    logging.warning('Folder: ' + homepath)
                     getUserName(tries+1)
+
+        # Failure to find file after 5 attempts
         else:
-            print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
-            logging.warning('Too many attempts to define ' +
-                            'a user folder.')
-        quit()
-    except KeyError:
-        logging.critical(str('Something bad just happened, check stacktrace to see the logs (＃ﾟДﾟ)').encode('utf-8'))
+            logging.critical('YOU HAVE ALREADY TRIED THIS TOO MANY TIMES!!!' + 
+                            ' (ノಠ益ಠ)ノ彡┻━┻', exc_info=True)
+            sys.exit(1)
+
+    # Error handling
+    except Exception as err:
+        logging.exception('Something really bad happened trying to get a user' +
+                        'name, check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True)
+
     logging.info('User profile selected: %s' % username)
     return username
 
-
+# Function to set destination directory to copy into
 def getUserDir(tries=0):
     userDir = None
 
     args = argp.parse_known_args(sys.argv[1:])
 
-    if tries < 5:
-        if args[0].destination is not None:
-            userDir = os.path.abspath(args[0].destination)
-            if os.path.isfile(userDir):
-                print('That was not a folder...')
-                argparse.ArgumentParser.exit()
+    try:
+        # 5 total attempts before quitting
+        if tries < 5:
+            # Source Directory is declared as an argument
+            if args[0].destination is not None:
+                userDir = os.path.abspath(args[0].destination)
+                if os.path.isfile(userDir):
+                    logging.warning('That was not a folder...')
+                    argparse.ArgumentParser.exit()
+
+            # Source Directory is not declared as an argument
+            else:
+                userDir = os.path.abspath(input('Destination folder to copy' +
+                                                ' user files/folders to: '))
+                # If destination is a file
+                if os.path.isfile(userDir):
+                    logging.warning('That was not a folder... \n Folder:' + userDir)
+                    getUserDir(tries+1)
+
+        # Failure to find file after 5 attempts
         else:
-            userDir = os.path.abspath(input('Destination folder to copy' +
-                                            ' user files/folders to: '))
-            if os.path.isfile(userDir):
-                print('That was not a folder...')
-                print(userDir)
-                getUserDir(tries+1)
-    else:
-        print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
-        logging.warning('Too many attempts to select ' +
-                        'a user destination directory.')
-        quit()
+            logging.exception('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!!' + 
+                            '(ノಠ益ಠ)ノ彡┻━┻', exc_info=True)
+            sys.exit(1)
+        # Error handling
+    except Exception as err:
+        logging.exception('Something really bad happened trying to get a folder ' +
+                        'name, check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True)
+
     logging.info('User destination directory selected: %s' % userDir)
     return userDir
 
-
+# Finding files
 def findfile(pattern, path):
     result = []
 
+    # Finding all files in the specified path to search
     for root, dirs, files in os.walk(path):
         for name in files:
             if fnmatch(name, pattern):
@@ -121,34 +154,48 @@ def findfile(pattern, path):
 
     return result
 
-
+# Copy function
 def copy(src, dst):
     try:
         for root, dirs, files in os.walk(src):
+            # Creates the root directory
             if not os.path.isdir(root):
                 os.makedirs(root)
                 logging.info('Root directory created: %s' % root)
 
+            # Creates directories and files to be copied into 
             for f in files:
+                # Creates directories if destination does not have a directory
                 if not os.path.isdir(dst):
                     os.makedirs(dst)
                     logging.info('Destination directory created: %s' % dst)
 
+                # Copies the files
                 nf_path = os.path.join(dst, f)
                 f_path = os.path.join(root, f)
                 shutil.copy(f_path, nf_path)
                 logging.info('New file copied: %s' % str(nf_path))
 
+    # Any error during the copying process
     except Exception as err:
-        logging.exception('Exception occurred trying to copy')
+        logging.exception('Exception occurred trying to copy', exc_info=True)
 
-
+# Main function
 def app():
     print('\n* This script does not copy ' +
           'anything from the downloads folder. *\n')
+
+    # * Vars for script *
+    # getUserName() runs a function to retrieve a username whether by an argument
+    # or by the prompt inside the function and returns the username as a string
+    #
+    # getDir() runs a function to select a directory to copy all the files in the
+    # selected users folder whether by an argument or a prompt inside the 
+    # function and returns the destination directory as a string 
     username = getUserName()
     userDir = getUserDir()
 
+    # Folders to copy over
     folders = [
         r'C:\Users\%s\Documents' % username,
         r'C:\Users\%s\Desktop' % username,
@@ -164,15 +211,18 @@ def app():
         r'C:\Users\%s\AppData\Local\Google\Chrome' % username
         ]
 
+    # Looking for paths to copy
     for path in folders:
         path = os.path.abspath(path)
         newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
                               userDir + os.sep + '%s' % username)
 
+        # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
         if 'Outlook' in path and 'Local' in path:
             for f in findfile('*.pst', path):
                 copy(f, os.path.join(newDst, f))
 
+        # Copy Outlook folders in %APPDATA%/Roaming/Microsoft/Outlook
         elif ('Outlook' in path and
               'RoamCache' not in path and
               'Roaming' in path):
@@ -182,6 +232,18 @@ def app():
         else:
             copy(path, newDst)
 
-    # os.system('pause')
 
-app()
+if __name__ == '__main__':
+    try:
+        logging.info('****************************************************')
+        logging.info('SCRIPT STARTED')
+        logging.info('****************************************************')
+        app()
+        logging.info('****************************************************')
+        logging.info('SCRIPT STOPPED')
+        logging.info('****************************************************')
+    except (KeyboardInterrupt, SystemError, SystemExit) as err:
+        logging.error("Stopped the script!", exc_info=True)
+        logging.info('****************************************************')
+        sys.exit(1)
+

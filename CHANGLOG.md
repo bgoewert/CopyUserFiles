@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.BGogurt/CopyUserFiles/releases/tag/1.2.0) ([compare](https://github.com/BGogurt/CopyUserFiles/compare/1.1.0...1.2.0))
+
+### Added
+
+- Travis-CI integration ([526cad8](https://github.com/garrettsummerfi3ld/CopyUserFiles/commit/526cad8da8a472ae89e3568cdfc0cffaec60adc2))
+- Verbose logging ([5e3d9c2](https://github.com/garrettsummerfi3ld/CopyUserFiles/commit/49a32878ad2877055725e7eeaa6434193e714f94))
+
+### Documented
+
+- Documented all functions in the script ([04a7a0c](https://github.com/garrettsummerfi3ld/CopyUserFiles/commit/04a7a0c7a907a86565cab1468ea4ea0857ea120d))
+
 ## [1.1.0](https://github.com/BGogurt/CopyUserFiles/releases/tag/1.1.0) ([compare](https://github.com/BGogurt/CopyUserFiles/compare/1.0.0...1.1.0))
 
 ### Added
