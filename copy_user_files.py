@@ -97,9 +97,9 @@ def getUserName(tries=0):
             sys.exit(1)
 
     # Error handling
-    except (KeyError, NameError) as err:
+    except Exception as err:
         logging.exception('Something really bad happened trying to get a user' +
-                        'name, check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True) 
+                        'name, check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True)
 
     logging.info('User profile selected: %s' % username)
     return username
@@ -110,29 +110,34 @@ def getUserDir(tries=0):
 
     args = argp.parse_known_args(sys.argv[1:])
 
-    # 5 total attempts before quitting
-    if tries < 5:
-        # Source Directory is declared as an argument
-        if args[0].destination is not None:
-            userDir = os.path.abspath(args[0].destination)
-            if os.path.isfile(userDir):
-                logging.warning('That was not a folder...')
-                argparse.ArgumentParser.exit()
+    try:
+        # 5 total attempts before quitting
+        if tries < 5:
+            # Source Directory is declared as an argument
+            if args[0].destination is not None:
+                userDir = os.path.abspath(args[0].destination)
+                if os.path.isfile(userDir):
+                    logging.warning('That was not a folder...')
+                    argparse.ArgumentParser.exit()
 
-        # Source Directory is not declared as an argument
+            # Source Directory is not declared as an argument
+            else:
+                userDir = os.path.abspath(input('Destination folder to copy' +
+                                                ' user files/folders to: '))
+                # If destination is a file
+                if os.path.isfile(userDir):
+                    logging.warning('That was not a folder... \n Folder:' + userDir)
+                    getUserDir(tries+1)
+
+        # Failure to find file after 5 attempts
         else:
-            userDir = os.path.abspath(input('Destination folder to copy' +
-                                            ' user files/folders to: '))
-            # If destination is a file
-            if os.path.isfile(userDir):
-                logging.warning('That was not a folder... \n Folder:' + userDir)
-                getUserDir(tries+1)
-
-    # Failure to find file after 5 attempts
-    else:
-        logging.exception('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!!' + 
-                        '(ノಠ益ಠ)ノ彡┻━┻', exc_info=True)
-        sys.exit(1)
+            logging.exception('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!!' + 
+                            '(ノಠ益ಠ)ノ彡┻━┻', exc_info=True)
+            sys.exit(1)
+        # Error handling
+    except Exception as err:
+        logging.exception('Something really bad happened trying to get a folder ' +
+                        'name, check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True)
 
     logging.info('User destination directory selected: %s' % userDir)
     return userDir
