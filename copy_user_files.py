@@ -79,10 +79,10 @@ def getUserName(tries=0):
             print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
             logging.warning('Too many attempts to define ' +
                             'a user folder.')
-        quit()
+            quit()
     except:
-        logging.critical(str('Something bad just happened, check stacktrace ' +
-                             'to see the logs (＃ﾟДﾟ)').encode('utf-8'))
+        logging.exception(str('Something bad just happened, check stacktrace' +
+                          ' to see the logs (＃ﾟДﾟ)').encode('UTF-8'))
     logging.info('User profile selected: %s' % username)
     return username
 
