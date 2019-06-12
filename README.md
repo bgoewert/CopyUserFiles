@@ -10,6 +10,7 @@ These cannot currently be used if using the executable.
 |Command            |Description                                                                                                |
 |-------------------|-----------------------------------------------------------------------------------------------------------|
 |-d, --destination  | Sets the destination directory (e.g. "C:\\User Folders"). Doing so will allow script to be run sliently.  |
+|-u, --username     | Sets the username of the profile folder to copy from.                                                     |
 
 <br>
 
