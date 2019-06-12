@@ -40,6 +40,7 @@ logging.basicConfig(level=logging.INFO,
                     filemode='a',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%d-%m-%y %H:%M:%S')
+logging.getLogger().addHandler(logging.StreamHandler())
 
 # Command-line arguments
 argp = argparse.ArgumentParser(description='Copies all the important ' +
@@ -64,7 +65,6 @@ def getUserName(tries=0):
     # Retrieving arguments
     args = argp.parse_known_args(sys.argv[1:])
     logging.info(args)
-    print(args)
     try:
         # 5 total attempts before quitting
         if tries < 5:
@@ -83,7 +83,7 @@ def getUserName(tries=0):
             # Username is not declared as an argument
             else:
                 logging.info('Prompting for user name...')
-                username = str(input('Name of user folder: '))
+                username = input('Name of user folder: ')
                 homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
                 if not os.path.exists(homepath):
                     logging.warning('That was not a folder...')
@@ -94,12 +94,12 @@ def getUserName(tries=0):
         else:
             logging.critical('YOU HAVE ALREADY TRIED THIS TOO MANY TIMES!!!' + 
                             ' (ノಠ益ಠ)ノ彡┻━┻', exc_info=True)
-        quit()
+            sys.exit(1)
 
-    # KeyError exception, only occurs during 
-    except KeyError:
+    # Error handling
+    except (KeyError, NameError) as err:
         logging.exception('Something really bad happened trying to get a user' +
-                        'name , check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True)
+                        'name, check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True) 
 
     logging.info('User profile selected: %s' % username)
     return username
@@ -127,11 +127,13 @@ def getUserDir(tries=0):
             if os.path.isfile(userDir):
                 logging.warning('That was not a folder... \n Folder:' + userDir)
                 getUserDir(tries+1)
-    # Giving up
+
+    # Failure to find file after 5 attempts
     else:
         logging.exception('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!!' + 
                         '(ノಠ益ಠ)ノ彡┻━┻', exc_info=True)
-        quit()
+        sys.exit(1)
+
     logging.info('User destination directory selected: %s' % userDir)
     return userDir
 
@@ -175,9 +177,6 @@ def copy(src, dst):
 
 # Main function
 def app():
-    logging.info('****************************************************')
-    logging.info('SCRIPT STARTED')
-    logging.info('****************************************************')
     print('\n* This script does not copy ' +
           'anything from the downloads folder. *\n')
 
@@ -228,8 +227,18 @@ def app():
         else:
             copy(path, newDst)
 
-    logging.info('****************************************************')
-    logging.info('SCRIPT STOPPED')
-    logging.info('****************************************************')# os.system('pause')
 
-app()
+if __name__ == '__main__':
+    try:
+        logging.info('****************************************************')
+        logging.info('SCRIPT STARTED')
+        logging.info('****************************************************')
+        app()
+        logging.info('****************************************************')
+        logging.info('SCRIPT STOPPED')
+        logging.info('****************************************************')
+    except (KeyboardInterrupt, SystemError, SystemExit) as err:
+        logging.error("Stopped the script!", exc_info=True)
+        logging.info('****************************************************')
+        sys.exit(1)
+
