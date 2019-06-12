@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # -----------------------------------------------------------------------------
 # Copyright (c) 2019 Brennan Goewert
 
@@ -40,14 +42,14 @@ log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
 # Logging config
 logging.basicConfig(level=logging.INFO,
                     filename=log_path,
-                    filemode='w',
+                    filemode='a',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%d-%m-%y %H:%M:%S')
+logging.getLogger().addHandler(logging.StreamHandler())
 
-# Command line arguments
+# Command-line arguments
 argp = argparse.ArgumentParser(description='Copies all the important ' +
                                'files and folders from the user profile.')
-
 # Destination
 argp.add_argument('-d', '--destination', type=str,
                   help='Set the destination directory.',
@@ -246,34 +248,49 @@ def getUserDestDir(tries=0):
 
     args = argp.parse_known_args(sys.argv[1:])
 
-    if tries < 5:
-        if args[0].destination is not None:
-            userDir = os.path.abspath(args[0].destination)
-            if os.path.isfile(userDir):
-                print('That was not a folder...')
-                argparse.ArgumentParser.exit()
+    try:
+        # 5 total attempts before quitting
+        if tries < 5:
+            # Source Directory is declared as an argument
+            if args[0].destination is not None:
+                userDir = os.path.abspath(args[0].destination)
+                if os.path.isfile(userDir):
+                    logging.warning('That was not a folder...')
+                    argparse.ArgumentParser.exit()
+
+            # Source Directory is not declared as an argument
+            else:
+                userDir = os.path.abspath(input('Destination folder to copy' +
+                                                ' user files/folders to: '))
+                # If destination is a file
+                if os.path.isfile(userDir):
+                    logging.warning('That was not a folder... \n Folder:' +
+                                    userDir)
+                    getUserDir(tries + 1)
+
+        # Failure to find file after 5 attempts
         else:
-            userDir = os.path.abspath(input('Destination folder to copy' +
-                                            ' user files/folders to: '))
-            if os.path.isfile(userDir):
-                print('That was not a folder...')
-                print(userDir)
-                getUserDestDir(tries+1)
-    else:
-        print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
-        logging.warning('Too many attempts to select ' +
-                        'a user destination directory.')
-        quit()
+            logging.exception('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!!' +
+                              '(ノಠ益ಠ)ノ彡┻━┻')
+            sys.exit(1)
+        # Error handling
+    except:
+        logging.exception(str('Something really bad happened trying to get ' +
+                              'a folder name, check stacktrace to see the ' +
+                              'logs (＃ﾟДﾟ)').encode('utf-8'))
+
     logging.info('User destination directory selected: %s' % userDir)
     return userDir
 
 
+# Finding files
 def findfile(pattern, path):
     """ Finds a file based on a pattern search.
     (e.g. '*.pst')
     """
     result = []
 
+    # Finding all files in the specified path to search
     for root, dirs, files in os.walk(path):
         for name in files:
             if fnmatch(name, pattern):
@@ -282,30 +299,46 @@ def findfile(pattern, path):
     return result
 
 
+# Copy function
 def copy(src, dst):
     """ Copies all sub folders and files from the source. """
 
     try:
         for root, dirs, files in os.walk(src):
+            # Creates the root directory
             if not os.path.isdir(root):
                 os.makedirs(root)
                 logging.info('Root directory created: %s' % root)
 
+            # Creates directories and files to be copied into
             for f in files:
+                # Creates directories if destination does not have a directory
                 if not os.path.isdir(dst):
                     os.makedirs(dst)
                     logging.info('Destination directory created: %s' % dst)
 
+                # Copies the files
                 nf_path = os.path.join(dst, f)
                 f_path = os.path.join(root, f)
                 shutil.copy(f_path, nf_path)
                 logging.info('New file copied: %s' % str(nf_path))
 
+    # Any error during the copying process
     except Exception as err:
         logging.exception('Exception occurred while trying to copy')
 
 
 def main():
+    """ Main function
+    - getUserName()
+        runs a function to retrieve a username whether by an argument
+        or by the prompt inside the function and returns the username
+        as a string
+    - getDir()
+        runs a function to select a directory to copy all the files in the
+        selected users folder whether by an argument or a prompt inside the
+        function and returns the destination directory as a string
+    """
 
     print('\n* This script does not copy' +
           'anything from the downloads folder. *\n')
@@ -314,6 +347,7 @@ def main():
     username = getUserName()
     userDir = getUserDestDir()
 
+    # Folders to copy over
     folders = [
         r'C:\Users\%s\Documents' % username,
         r'C:\Users\%s\Desktop' % username,
@@ -332,15 +366,18 @@ def main():
     if newDocs is not '' and newDocs is not None:
         setMyDocumentsLocation(newDocs)
 
+    # Copy all paths in the folders array
     for path in folders:
         path = os.path.abspath(path)
         newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
                               userDir + os.sep + '%s' % username)
 
+        # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
         if 'Outlook' in path and 'Local' in path:
             for f in findfile('*.pst', path):
                 copy(f, os.path.join(newDst, f))
 
+        # Copy Outlook folders in %APPDATA%/Roaming/Microsoft/Outlook
         elif ('Outlook' in path and
               'RoamCache' not in path and
               'Roaming' in path):
@@ -350,6 +387,16 @@ def main():
         else:
             copy(path, newDst)
 
-    # os.system('pause')
-
-main()
+if __name__ == '__main__':
+    try:
+        logging.info('****************************************************')
+        logging.info('SCRIPT STARTED')
+        logging.info('****************************************************')
+        app()
+        logging.info('****************************************************')
+        logging.info('SCRIPT STOPPED')
+        logging.info('****************************************************')
+    except (KeyboardInterrupt, SystemError, SystemExit) as err:
+        logging.error("Stopped the script!", exc_info=True)
+        logging.info('****************************************************')
+        sys.exit(1)
