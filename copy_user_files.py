@@ -60,7 +60,8 @@ def getUserName(tries=0):
         if tries < 5:
             if args[0].username is not None:
                 username = args[0].username
-                homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
+                homepath = (os.path.dirname(os.environ['HOME']) +
+                            os.sep + username)
                 if not os.path.exists(homepath):
                     print('That was not a folder...')
                     print(homepath)
@@ -68,7 +69,8 @@ def getUserName(tries=0):
                     argparse.ArgumentParser.exit()
             else:
                 username = input('Name of user folder: ')
-                homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
+                homepath = (os.path.dirname(os.environ['HOME']) +
+                            os.sep + username)
                 if not os.path.exists(homepath):
                     print('That was not a folder...')
                     print(homepath)
@@ -78,8 +80,9 @@ def getUserName(tries=0):
             logging.warning('Too many attempts to define ' +
                             'a user folder.')
         quit()
-    except KeyError:
-        logging.critical(str('Something bad just happened, check stacktrace to see the logs (＃ﾟДﾟ)').encode('utf-8'))
+    except:
+        logging.critical(str('Something bad just happened, check stacktrace ' +
+                             'to see the logs (＃ﾟДﾟ)').encode('utf-8'))
     logging.info('User profile selected: %s' % username)
     return username
 
