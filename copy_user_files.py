@@ -25,61 +25,194 @@ import sys
 import shutil
 import argparse
 import logging
+import winreg
 from fnmatch import fnmatch
 
 __version__ = '1.1.0'
 
+# Registry Key for User Folders
+regKey_UserFolderLocations = (r'Software\Microsoft\Windows\CurrentVersion' +
+                              r'\Explorer\User Shell Folders')
+
+# Path for log file
 log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         'copy_user_files.log')
+# Logging config
 logging.basicConfig(level=logging.INFO,
                     filename=log_path,
                     filemode='w',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%d-%m-%y %H:%M:%S')
+
+# Command line arguments
 argp = argparse.ArgumentParser(description='Copies all the important ' +
                                'files and folders from the user profile.')
+
+# Destination
 argp.add_argument('-d', '--destination', type=str,
                   help='Set the destination directory.',
                   action='store',
                   required=False)
+# Username
 argp.add_argument('-u', '--username', type=str,
                   help='Set the user\'s name of the ' +
                        'profile folder to copy from.',
                   action='store',
                   required=False)
 
+# Documents Location
+argp.add_argument('--set-documents', type=str,
+                  help='Set the user\'s documents folder location of the ' +
+                       'profile folder to copy from.',
+                  action='store',
+                  required=False)
+
+
+def getUserRegKey(key, valName):
+    """ Returns a user registry key value.
+    - key
+        The registry key (e.g. 'Software\\Microsoft\\Windows\\Current\
+Version\\Explorer\\User Shell Folders')
+    - valName
+        The registry value name
+    """
+
+    try:
+        # Open key to read
+        regKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                                key, 0, winreg.KEY_READ)
+    except WindowsError:
+        logging.exception(
+            'Registry Key does not exist in HKEY_CURRENT_USER: {}'.format(key))
+        return None
+
+    # Get key value and type
+    keyValue, keyType = winreg.QueryValueEx(regKey, valName)
+
+    # Close opened key
+    winreg.CloseKey(regKey)
+
+    return keyValue
+
+
+def setUserRegKey(key, valName, val, keyType=winreg.REG_SZ):
+    """ Sets a user registry key/value pair.
+    - key
+        The registry key (e.g. 'Software\\Microsoft\\Windows\\Current\
+Version\\Explorer\\User Shell Folders')
+    - valName
+        The registry value name
+    - val
+        The new value
+    - keyType
+        Defaults to REG_SZ
+    """
+
+    try:
+        # Open key to read
+        regKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                                key, 0, winreg.KEY_ALL_ACCESS)
+    except WindowsError:
+        logging.exception(
+            'Registry Key does not exist in HKEY_CURRENT_USER: {}'.format(key))
+        return None
+
+    try:
+        # Get key current value and type
+        keyValue, keyType = winreg.QueryValueEx(regKey, valName)
+    except WindowsError:
+        logging.exception('User registry key does not exist: {}'.format(
+            key + os.sep + valName))
+
+    try:
+        # Set new key value and get new key value
+        winreg.SetValueEx(regKey, valName, 0, keyType, val)
+        keyNewValue = winreg.QueryValueEx(regKey, valName)[0]
+    except WindowsError:
+        logging.exception(
+            'An error occurred while ' +
+            'setting registry key/value: {}'.format(key))
+        return None
+
+    # Close opened key
+    winreg.CloseKey(regKey)
+
+    logging.info('User registry key set: {}'.format(
+        key + os.sep + valName + ' = ' + keyNewValue))
+    print('User registry key set: {}'.format(
+        key + os.sep + valName + ' = ' + keyNewValue))
+    return keyNewValue
+
+
+def setMyDocumentsLocation(newLocation):
+    """ Set the location for My Documents. """
+
+    # Get the current location for My Documents
+    curVal_myDocuments = getUserRegKey(regKey_UserFolderLocations, 'Personal')
+
+    """ Set the new locations for My Documents
+    'This PC' Documents GUID Key Name = {F42EE2D3-909F-4907-8871-4C22FC0BF756}
+    Quick Access Documents Key Name = Personal
+    """
+    newVal_personal = setUserRegKey(regKey_UserFolderLocations,
+                                    'Personal', newLocation)
+    newVal_documents = setUserRegKey(regKey_UserFolderLocations,
+                                     '{F42EE2D3-909F-4907-8871-4C22FC0BF756}',
+                                     newLocation)
+
+    # TODO(Brennan): Log off then back in after setting the new location
+
 
 def getUserName(tries=0):
+    """
+    Returns the username from command line argument or user input.
+    Fails after 5 attempts of retriving a valid user.
+    """
+
+    logging.info('Attempting to retrieve username...')
     username = None
 
+    # Get any command line arguments
     args = argp.parse_known_args(sys.argv[1:])
-    print(args)
+    logging.info('Arguments: {}'.format(args))
+
+    # 5 total attempts before quitting
     if tries < 5:
+        # If username is set as an argument
         if args[0].username is not None:
             username = args[0].username
             homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
             if not os.path.exists(homepath):
                 print('That was not a folder...')
                 print(homepath)
-                input('Try another user name...')
+                print('Run the script again to try another user name...')
+                logging.error('User folder not found! - {}'.format(homepath))
                 argparse.ArgumentParser.exit()
+        # If it is not set as an argument, ask for user input
         else:
             username = input('Name of user folder: ')
             homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
             if not os.path.exists(homepath):
                 print('That was not a folder...')
                 print(homepath)
-                getUserName(tries+1)
+                logging.error('User folder not found! - {}'.format(homepath))
+                getUserName(tries + 1)
+
+    # Failure to find folder after 5 attempts
     else:
-        print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
-        logging.warning('Too many attempts to define ' +
+        print('YOU HAVE TRIED THIS TOO MANY TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
+        logging.warning('Too many attempts to find ' +
                         'a user folder.')
         quit()
+
+    # Return the username if folder was found
     logging.info('User profile selected: %s' % username)
     return username
 
 
 def getUserDir(tries=0):
+    """ Returns the user directory """
+
     userDir = None
 
     args = argp.parse_known_args(sys.argv[1:])
@@ -135,12 +268,14 @@ def copy(src, dst):
                 logging.info('New file copied: %s' % str(nf_path))
 
     except Exception as err:
-        logging.exception('Exception occurred trying to copy')
+        logging.exception('Exception occurred while trying to copy')
 
 
 def app():
     print('\n* This script does not copy' +
           'anything from the downloads folder. *\n')
+
+    # newDocs = input('New Documents target location (leave blank to skip): ')
     username = getUserName()
     userDir = getUserDir()
 
@@ -158,6 +293,9 @@ def app():
         r'C:\Users\%s\AppData\Roaming\Mozilla\Firefox' % username,
         r'C:\Users\%s\AppData\Local\Google\Chrome' % username
         ]
+
+    if newDocs is not '' and newDocs is not None:
+        setMyDocumentsLocation(newDocs)
 
     for path in folders:
         path = os.path.abspath(path)

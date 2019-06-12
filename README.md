@@ -5,11 +5,11 @@ This was made to copy important files and folders from a Windows user profile to
 ## Usage
 
 ### Command Line Arguments
-These cannot currently be used if using the executable.
 
 |Command            |Description                                                                                                |
 |-------------------|-----------------------------------------------------------------------------------------------------------|
-|-d, --destination  | Sets the destination directory (e.g. "C:\\User Folders"). Doing so will allow script to be run sliently.  |
+|-d, --destination  | Sets the destination directory (e.g. "C:\\User Folders"). Doing so will allow script to be run silently.  |
+|-u, --username     | Sets the username of the profile folder to copy from.                                                     |
 
 <br>
 
