@@ -73,7 +73,8 @@ def getUserName(tries=0):
             if args[0].username is not None:
                 logging.info('Username is declared as an argument!')
                 username = args[0].username
-                homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
+                homepath = (os.path.dirname(os.environ['HOME']) +
+                            os.sep + username)
                 if not os.path.exists(homepath):
                     logging.warning('That was not a folder...')
                     logging.warning('Folder:' + homepath)
@@ -84,7 +85,8 @@ def getUserName(tries=0):
             else:
                 logging.info('Prompting for user name...')
                 username = input('Name of user folder: ')
-                homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
+                homepath = (os.path.dirname(os.environ['HOME']) +
+                            os.sep + username)
                 if not os.path.exists(homepath):
                     logging.warning('That was not a folder...')
                     logging.warning('Folder: ' + homepath)
@@ -92,15 +94,13 @@ def getUserName(tries=0):
 
         # Failure to find file after 5 attempts
         else:
-            logging.critical('YOU HAVE ALREADY TRIED THIS TOO MANY TIMES!!!' + 
-                            ' (ノಠ益ಠ)ノ彡┻━┻', exc_info=True)
-            sys.exit(1)
-
-    # Error handling
-    except Exception as err:
-        logging.exception('Something really bad happened trying to get a user' +
-                        'name, check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True)
-
+            print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
+            logging.warning('Too many attempts to define ' +
+                            'a user folder.')
+            quit()
+    except:
+        logging.exception(str('Something bad just happened, check stacktrace' +
+                          ' to see the logs (＃ﾟДﾟ)').encode('UTF-8'))
     logging.info('User profile selected: %s' % username)
     return username
 
