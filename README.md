@@ -1,5 +1,7 @@
 # Copy User Files
 
+[![Build Status](https://travis-ci.org/garrettsummerfi3ld/CopyUserFiles.svg?branch=master)](https://travis-ci.org/garrettsummerfi3ld/CopyUserFiles)
+
 This was made to copy important files and folders from a Windows user profile to be used on another Windows computer.
 
 ## Usage
