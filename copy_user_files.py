@@ -328,7 +328,7 @@ def copy(src, dst):
         logging.exception('Exception occurred while trying to copy')
 
 
-def main():
+def app():
     """ Main function
     - getUserName()
         runs a function to retrieve a username whether by an argument
@@ -363,6 +363,8 @@ def main():
         r'C:\Users\%s\AppData\Local\Google\Chrome' % username
         ]
 
+    # If documents flag is set,
+    # change the documents folder target location to whatever was specified
     if newDocs is not '' and newDocs is not None:
         setMyDocumentsLocation(newDocs)
 
