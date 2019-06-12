@@ -9,7 +9,6 @@ matrix:
 install:
   - pip install -r requirements.txt
 before_script:
-  - pyinstaller copy_user_files.py
-  - pyinstaller copy_user_files.spec
+  - pyinstaller copy_user_files.py -y
 script:
-  - pytest copy_user_files.py
+  - pyinstaller copy_user_files.spec -y

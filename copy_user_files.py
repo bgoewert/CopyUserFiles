@@ -40,6 +40,7 @@ logging.basicConfig(level=logging.INFO,
                     filemode='a',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%d-%m-%y %H:%M:%S')
+logging.getLogger().addHandler(logging.StreamHandler())
 
 # Command-line arguments
 argp = argparse.ArgumentParser(description='Copies all the important ' +
@@ -64,7 +65,6 @@ def getUserName(tries=0):
     # Retrieving arguments
     args = argp.parse_known_args(sys.argv[1:])
     logging.info(args)
-    print(args)
     try:
         # 5 total attempts before quitting
         if tries < 5:
@@ -83,7 +83,7 @@ def getUserName(tries=0):
             # Username is not declared as an argument
             else:
                 logging.info('Prompting for user name...')
-                username = str(input('Name of user folder: '))
+                username = input('Name of user folder: ')
                 homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
                 if not os.path.exists(homepath):
                     logging.warning('That was not a folder...')
@@ -94,12 +94,12 @@ def getUserName(tries=0):
         else:
             logging.critical('YOU HAVE ALREADY TRIED THIS TOO MANY TIMES!!!' + 
                             ' (ノಠ益ಠ)ノ彡┻━┻', exc_info=True)
-        quit()
+            sys.exit(1)
 
-    # KeyError exception, only occurs during 
-    except KeyError:
+    # Error handling
+    except Exception as err:
         logging.exception('Something really bad happened trying to get a user' +
-                        'name , check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True)
+                        'name, check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True)
 
     logging.info('User profile selected: %s' % username)
     return username
@@ -110,24 +110,35 @@ def getUserDir(tries=0):
 
     args = argp.parse_known_args(sys.argv[1:])
 
-    if tries < 5:
-        # Source Directory is declared as an argument
-        if args[0].destination is not None:
-            userDir = os.path.abspath(args[0].destination)
-            if os.path.isfile(userDir):
-                logging.warning('That was not a folder...')
-                argparse.ArgumentParser.exit()
-        # Source Directory is not declared as an argument
+    try:
+        # 5 total attempts before quitting
+        if tries < 5:
+            # Source Directory is declared as an argument
+            if args[0].destination is not None:
+                userDir = os.path.abspath(args[0].destination)
+                if os.path.isfile(userDir):
+                    logging.warning('That was not a folder...')
+                    argparse.ArgumentParser.exit()
+
+            # Source Directory is not declared as an argument
+            else:
+                userDir = os.path.abspath(input('Destination folder to copy' +
+                                                ' user files/folders to: '))
+                # If destination is a file
+                if os.path.isfile(userDir):
+                    logging.warning('That was not a folder... \n Folder:' + userDir)
+                    getUserDir(tries+1)
+
+        # Failure to find file after 5 attempts
         else:
-            userDir = os.path.abspath(input('Destination folder to copy' +
-                                            ' user files/folders to: '))
-            if os.path.isfile(userDir):
-                logging.warning('That was not a folder... \n Folder:' + userDir)
-                getUserDir(tries+1)
-    else:
-        logging.exception('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!!' + 
-                        '(ノಠ益ಠ)ノ彡┻━┻', exc_info=True)
-        quit()
+            logging.exception('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!!' + 
+                            '(ノಠ益ಠ)ノ彡┻━┻', exc_info=True)
+            sys.exit(1)
+        # Error handling
+    except Exception as err:
+        logging.exception('Something really bad happened trying to get a folder ' +
+                        'name, check stacktrace to see the logs (＃ﾟДﾟ)', exc_info=True)
+
     logging.info('User destination directory selected: %s' % userDir)
     return userDir
 
@@ -135,6 +146,7 @@ def getUserDir(tries=0):
 def findfile(pattern, path):
     result = []
 
+    # Finding all files in the specified path to search
     for root, dirs, files in os.walk(path):
         for name in files:
             if fnmatch(name, pattern):
@@ -170,9 +182,6 @@ def copy(src, dst):
 
 # Main function
 def app():
-    logging.info('****************************************************')
-    logging.info('SCRIPT STARTED')
-    logging.info('****************************************************')
     print('\n* This script does not copy ' +
           'anything from the downloads folder. *\n')
 
@@ -202,6 +211,7 @@ def app():
         r'C:\Users\%s\AppData\Local\Google\Chrome' % username
         ]
 
+    # Looking for paths to copy
     for path in folders:
         path = os.path.abspath(path)
         newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
@@ -222,8 +232,18 @@ def app():
         else:
             copy(path, newDst)
 
-    logging.info('****************************************************')
-    logging.info('SCRIPT STOPPED')
-    logging.info('****************************************************')# os.system('pause')
 
-app()
+if __name__ == '__main__':
+    try:
+        logging.info('****************************************************')
+        logging.info('SCRIPT STARTED')
+        logging.info('****************************************************')
+        app()
+        logging.info('****************************************************')
+        logging.info('SCRIPT STOPPED')
+        logging.info('****************************************************')
+    except (KeyboardInterrupt, SystemError, SystemExit) as err:
+        logging.error("Stopped the script!", exc_info=True)
+        logging.info('****************************************************')
+        sys.exit(1)
+
