@@ -210,8 +210,37 @@ def getUserName(tries=0):
     return username
 
 
-def getUserDir(tries=0):
-    """ Returns the user directory """
+def getUserSrcDir(tries=0):
+    """ Returns the user source directory """
+
+    userDir = None
+
+    args = argp.parse_known_args(sys.argv[1:])
+
+    if tries < 5:
+        if args[0].destination is not None:
+            userDir = os.path.abspath(args[0].destination)
+            if os.path.isfile(userDir):
+                print('That was not a folder...')
+                argparse.ArgumentParser.exit()
+        else:
+            userDir = os.path.abspath(input('User source folder to copy' +
+                                            ' user files/folders from: '))
+            if os.path.isfile(userDir):
+                print('That was not a folder...')
+                print(userDir)
+                getUserSrcDir(tries+1)
+    else:
+        print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
+        logging.warning('Too many attempts to select ' +
+                        'a user destination directory.')
+        quit()
+    logging.info('User source directory selected: %s' % userDir)
+    return userDir
+
+
+def getUserDestDir(tries=0):
+    """ Returns the user destination directory """
 
     userDir = None
 
@@ -229,7 +258,7 @@ def getUserDir(tries=0):
             if os.path.isfile(userDir):
                 print('That was not a folder...')
                 print(userDir)
-                getUserDir(tries+1)
+                getUserDestDir(tries+1)
     else:
         print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
         logging.warning('Too many attempts to select ' +
@@ -240,6 +269,9 @@ def getUserDir(tries=0):
 
 
 def findfile(pattern, path):
+    """ Finds a file based on a pattern search.
+    (e.g. '*.pst')
+    """
     result = []
 
     for root, dirs, files in os.walk(path):
@@ -251,6 +283,8 @@ def findfile(pattern, path):
 
 
 def copy(src, dst):
+    """ Copies all sub folders and files from the source. """
+
     try:
         for root, dirs, files in os.walk(src):
             if not os.path.isdir(root):
@@ -271,13 +305,14 @@ def copy(src, dst):
         logging.exception('Exception occurred while trying to copy')
 
 
-def app():
+def main():
+
     print('\n* This script does not copy' +
           'anything from the downloads folder. *\n')
 
     # newDocs = input('New Documents target location (leave blank to skip): ')
     username = getUserName()
-    userDir = getUserDir()
+    userDir = getUserDestDir()
 
     folders = [
         r'C:\Users\%s\Documents' % username,
@@ -317,4 +352,4 @@ def app():
 
     # os.system('pause')
 
-app()
+main()
