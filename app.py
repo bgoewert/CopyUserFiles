@@ -22,8 +22,9 @@
 # SOFTWARE.
 # -----------------------------------------------------------------------------
 
-import copy_user_files
+import copyuserfiles
 import tkinter as tk
+import tkinter.filedialog as tkFileDialog
 
 root = tk.Tk()
 root.title('Copy User Files')
@@ -31,48 +32,145 @@ root.geometry('720x540')
 root.minsize(300, 300)
 root.resizable(True, True)
 
+
+def cmd_select_src():
+    """ Opens a file dialog to select a source directory.
+    - str_src_dir = tkinter.StringVar() variable
+    """
+    str_src_dir.set(tkFileDialog.askdirectory())
+
+
+def cmd_chk_enable_labelframe(b=tk.BooleanVar,
+                              labelframe=tk.LabelFrame):
+    if b.get() is True:
+        labelframe.grid()
+        print('Label Frame Enabled')
+    elif b.get() is False:
+        labelframe.grid_remove()
+        print('Label Frame Disabled')
+
 # tkinter string values
 str_src_dir = tk.StringVar()
 str_dest_dir = tk.StringVar()
 str_username = tk.StringVar()
+str_hostname = tk.StringVar()
 
 # tkinter integers and booleans
-bool_copy_downloads = tk.IntVar()
+bool_copy_downloads = tk.BooleanVar()
+bool_documents_loc = tk.BooleanVar()
+
+
+def dir_select_label_group(frame):
+    # Directory selection group
+    grp_dirs = tk.LabelFrame(frame)
+    grp_dirs.grid(row=0, column=0, pady=(0, 5), sticky='we')
+    grp_dirs.grid_columnconfigure(2, weight=1)
+
+    # Source directory
+    src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
+    src_dir_entry = tk.Entry(grp_dirs, textvariable=str_src_dir)
+    src_dir_btn = tk.Button(grp_dirs,
+                            text='Select Source',
+                            command=lambda: cmd_select_src())
+    src_dir_label.grid(row=0, column=1, sticky='e')
+    src_dir_entry.grid(row=0, column=2, columnspan=2, sticky='we', padx=(0, 5))
+    src_dir_btn.grid(row=0, column=0, sticky='we')
+
+    # Destination directory
+    dest_dir_label = tk.Label(grp_dirs, text='Destination Directory: ', )
+    dest_dir_entry = tk.Entry(grp_dirs, textvariable=str_dest_dir)
+    dest_dir_btn = tk.Button(grp_dirs,
+                             text='Select Destintation',
+                             command=lambda: cmd_select_src())
+    dest_dir_label.grid(row=1, column=1, sticky='e')
+    dest_dir_entry.grid(row=1, column=2, columnspan=2, sticky='we',
+                        padx=(0, 5))
+    dest_dir_btn.grid(row=1, column=0, sticky='we')
+
+
+def remote_actions_label_group(frame):
+    # Remote actions frame
+    grp_remote = tk.LabelFrame(frame)
+    grp_remote.grid(row=1, column=0, pady=(0, 5), sticky='we')
+    grp_remote.columnconfigure(0, weight=1)
+
+    # Remote actions sub-frame
+    grp_remote_actions = tk.LabelFrame(grp_remote)
+    grp_remote_actions.grid(row=1, column=0, pady=(0, 5), sticky='we')
+    grp_remote_actions.columnconfigure(0, weight=0)
+    grp_remote_actions.columnconfigure(1, weight=1)
+    grp_remote_actions.config(bd=0)
+
+    # Remote documents folder location checkbox
+    chk_documents_loc = tk.Checkbutton(grp_remote,
+                                       text='Set remote documents folder' +
+                                            ' location',
+                                       variable=bool_documents_loc,
+                                       command=lambda:
+                                       grp_remote_actions.grid() if
+                                       bool_documents_loc.get() else
+                                       grp_remote_actions.grid_remove())
+    chk_documents_loc.grid(row=0,
+                           column=0,
+                           sticky='w',
+                           padx=(1, 15))
+
+    # Remote hostname entry
+    src_dir_label = tk.Label(grp_remote_actions, text='Remote Hostname: ', )
+    src_dir_entry = tk.Entry(grp_remote_actions, textvariable=str_hostname)
+    src_dir_label.grid(row=0, column=0, sticky='e')
+    src_dir_entry.grid(row=0, column=1, sticky='we')
+
+    # Remote documents folder target location entry
+    src_dir_label = tk.Label(grp_remote_actions, text='Documents ' +
+                                                      'Target Location: ', )
+    src_dir_entry = tk.Entry(grp_remote_actions, textvariable=str_hostname)
+    src_dir_label.grid(row=1, column=0, sticky='e')
+    src_dir_entry.grid(row=1, column=1, sticky='we')
+
+    grp_remote_actions.grid_remove()
+
+
+def action_label_group(frame):
+    # Action button group
+    grp_actions = tk.LabelFrame(frame)
+    grp_actions.grid(row=2, column=0, pady=(0, 5), sticky='we')
+
+    # Start button
+    btn_start = tk.Button(grp_actions,
+                          text='Start',
+                          bg='#209920',
+                          width=5)
+    btn_start.grid(row=0, column=0, sticky='we')
+
+    # Stop button
+    btn_stop = tk.Button(grp_actions,
+                         text='Stop',
+                         bg='#aa2020',
+                         width=5)
+    btn_stop.grid(row=0, column=1, sticky='we')
+
+    # Copy Downloads checkbox
+    chk_copy_downloads = tk.Checkbutton(grp_actions,
+                                        text='Copy Downloads Folder (Limited' +
+                                             ' to 50 most recent files)',
+                                        variable=bool_copy_downloads)
+    chk_copy_downloads.grid(row=0, column=2, sticky='w',
+                            padx=(15, 15))
 
 
 def header():
     """ Header frame """
 
     fra_header = tk.Frame(root)
-    fra_header.grid_columnconfigure(0, weight=0)
-    fra_header.grid_columnconfigure(1, weight=1)
-    fra_header.grid_rowconfigure(1, weight=1)
+    fra_header.grid_columnconfigure(0, weight=1)
+    fra_header.grid_rowconfigure(0, weight=1)
 
-    # Main control group
-    grp_controls = tk.LabelFrame(fra_header)
-    grp_controls.grid(row=0, column=0, pady=(0, 5), sticky='w')
+    dir_select_label_group(fra_header)
 
-    # source directory
-    src_dir_label = tk.Label(grp_controls, text='Source Directory: ', )
-    src_dir_entry = tk.Entry(grp_controls, textvariable=str_src_dir)
-    src_dir_btn = tk.Button(grp_controls,
-                            text='Select Source Directory',
-                            command=lambda: tk.filedialog.askdirectory())
-    src_dir_label.grid(row=0, column=0, sticky='e')
-    src_dir_entry.grid(row=0, column=1, columnspan=2, sticky='we')
-    src_dir_btn.grid(row=0, column=2, sticky='w')
+    remote_actions_label_group(fra_header)
 
-    # Copy Downloads checkbox
-    chk_copy_downloads = tk.Checkbutton(grp_controls,
-                                        text='Copy Downloads Folder (Limited' +
-                                             ' to 50 most recent files)',
-                                        variable=bool_copy_downloads)
-    chk_copy_downloads.grid(row=1, column=0, columnspan=2, sticky='w')
-
-    # Start button
-    btn_start = tk.Button(grp_controls,
-                          text='Start')
-    btn_start.grid(row=2, column=0, sticky='w')
+    action_label_group(fra_header)
 
     # Pack all the widgets
     fra_header.pack(side='top', padx=10, pady=10, fill='x')
@@ -81,12 +179,17 @@ def header():
 def body():
     """ Body frame """
 
-    fra_body = tk.Frame(root, height=20)
+    fra_body = tk.Frame(root)
+    fra_body.grid_columnconfigure(0, weight=1)
+    fra_body.grid_rowconfigure(0, weight=1)
+
     txt_results = tk.Text(fra_body, width=20, height=5)
     txt_results_scroll = tk.Scrollbar(fra_body,
                                       orient='vertical',
                                       command=txt_results.yview)
     txt_results.config(state='disabled', yscrollcommand=txt_results_scroll.set)
+
+    txt_results.grid(row=0, column=0, sticky='nswe')
 
     # Pack all the widgets
     fra_body.pack(side='top', fill='both', expand=True)
@@ -100,7 +203,7 @@ def footer():
     fra_footer.grid_rowconfigure(0, weight=1)
 
     lbl_version = tk.Label(fra_footer, text='Ver: ' +
-                                            copy_user_files.__version__)
+                           copyuserfiles.__version__)
     lbl_version.grid(row=0, column=0)
 
     # Pack all the widgets

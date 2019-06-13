@@ -62,13 +62,6 @@ argp.add_argument('-u', '--username', type=str,
                   action='store',
                   required=False)
 
-# Documents Location
-argp.add_argument('--set-documents', type=str,
-                  help='Set the user\'s documents folder location of the ' +
-                       'profile folder to copy from.',
-                  action='store',
-                  required=False)
-
 
 def getUserRegKey(key, valName):
     """ Returns a user registry key value.
@@ -225,6 +218,7 @@ def getUserSrcDir(tries=0):
             if os.path.isfile(userDir):
                 print('That was not a folder...')
                 argparse.ArgumentParser.exit()
+
         else:
             userDir = os.path.abspath(input('User source folder to copy' +
                                             ' user files/folders from: '))
