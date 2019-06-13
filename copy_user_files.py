@@ -283,9 +283,8 @@ def getUserDestDir(tries=0):
     return userDir
 
 
-# Finding files
-def findfile(pattern, path):
-    """ Finds a file based on a pattern search.
+def _findfile(pattern, path):
+    """ Finds a file in a folder based on a pattern search.
     (e.g. '*.pst')
     """
     result = []
@@ -299,8 +298,7 @@ def findfile(pattern, path):
     return result
 
 
-# Copy function
-def copy(src, dst):
+def _copyall(src, dst):
     """ Copies all sub folders and files from the source. """
 
     try:
@@ -328,15 +326,18 @@ def copy(src, dst):
         logging.exception('Exception occurred while trying to copy')
 
 
-def app():
+def main():
     """ Main function
     - getUserName()
-        runs a function to retrieve a username whether by an argument
-        or by the prompt inside the function and returns the username
-        as a string
-    - getDir()
-        runs a function to select a directory to copy all the files in the
+        Gets a username whether by an argument  or by the prompt
+        inside the function and returns the username as a string
+    - getUserSrcDir()
+        Gets a directory to copy all the files from the
         selected users folder whether by an argument or a prompt inside the
+        function and returns the source directory as a string
+    - getUserDestDir()
+        Get a directory to copy all the files to from the selected
+        users folder whether by an argument or a prompt inside the
         function and returns the destination directory as a string
     """
 
@@ -376,25 +377,25 @@ def app():
 
         # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
         if 'Outlook' in path and 'Local' in path:
-            for f in findfile('*.pst', path):
-                copy(f, os.path.join(newDst, f))
+            for f in _findfile('*.pst', path):
+                _copyall(f, os.path.join(newDst, f))
 
         # Copy Outlook folders in %APPDATA%/Roaming/Microsoft/Outlook
         elif ('Outlook' in path and
               'RoamCache' not in path and
               'Roaming' in path):
-            for f in findfile('*.nk2', path):
-                copy(f, os.path.join(newDst, f))
+            for f in _findfile('*.nk2', path):
+                _copyall(f, os.path.join(newDst, f))
 
         else:
-            copy(path, newDst)
+            copyall(path, newDst)
 
 if __name__ == '__main__':
     try:
         logging.info('****************************************************')
         logging.info('SCRIPT STARTED')
         logging.info('****************************************************')
-        app()
+        main()
         logging.info('****************************************************')
         logging.info('SCRIPT STOPPED')
         logging.info('****************************************************')
