@@ -38,7 +38,7 @@ regKey_UserFolderLocations = (r'Software\Microsoft\Windows\CurrentVersion' +
 
 # Path for log file
 log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                        'copy_user_files.log')
+                        'copyuserfiles.log')
 # Logging config
 logging.basicConfig(level=logging.INFO,
                     filename=log_path,
