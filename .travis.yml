@@ -6,7 +6,7 @@ matrix:
       language: shell
       before_install: choco install python
       env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
-install:
+before_install:
   - pip install -r requirements.txt
 install:
   - pyinstaller app.py -y
