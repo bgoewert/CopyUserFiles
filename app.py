@@ -22,9 +22,12 @@
 # SOFTWARE.
 # -----------------------------------------------------------------------------
 
-import copyuserfiles
+from src import copyuserfiles
+from src.hostnameselect import HostnameSelect
+import os
 import tkinter as tk
 import tkinter.filedialog as tkFileDialog
+import tkinter.simpledialog as tkSimpleDialog
 
 root = tk.Tk()
 root.title('Copy User Files')
@@ -32,32 +35,38 @@ root.geometry('720x540')
 root.minsize(300, 300)
 root.resizable(True, True)
 
-
-def cmd_select_src():
-    """ Opens a file dialog to select a source directory.
-    - str_src_dir = tkinter.StringVar() variable
-    """
-    str_src_dir.set(tkFileDialog.askdirectory())
-
-
-def cmd_chk_enable_labelframe(b=tk.BooleanVar,
-                              labelframe=tk.LabelFrame):
-    if b.get() is True:
-        labelframe.grid()
-        print('Label Frame Enabled')
-    elif b.get() is False:
-        labelframe.grid_remove()
-        print('Label Frame Disabled')
-
 # tkinter string values
 str_src_dir = tk.StringVar()
 str_dest_dir = tk.StringVar()
 str_username = tk.StringVar()
 str_hostname = tk.StringVar()
+str_docs_loc = tk.StringVar()
 
 # tkinter integers and booleans
 bool_copy_downloads = tk.BooleanVar()
 bool_documents_loc = tk.BooleanVar()
+
+host = HostnameSelect(root)
+
+
+def cmd_select_dir(str_var):
+    """ Opens a file dialog to select a source directory.
+    - str_src_dir = tkinter.StringVar() variable
+    """
+    str_var.set(tkFileDialog.askdirectory())
+
+
+def cmd_get_listselect(event):
+    w = event.widget
+    index = int(w.curselection()[0])
+    value = w.get(index)
+    return w.selection_set(0)
+
+
+def cmd_select_hostname(frame):
+    host.display_list(frame)
+    print(host.hostname)
+    str_hostname.set(host.hostname)
 
 
 def dir_select_label_group(frame):
@@ -71,7 +80,7 @@ def dir_select_label_group(frame):
     src_dir_entry = tk.Entry(grp_dirs, textvariable=str_src_dir)
     src_dir_btn = tk.Button(grp_dirs,
                             text='Select Source',
-                            command=lambda: cmd_select_src())
+                            command=lambda: cmd_select_dir(str_src_dir))
     src_dir_label.grid(row=0, column=1, sticky='e')
     src_dir_entry.grid(row=0, column=2, columnspan=2, sticky='we', padx=(0, 5))
     src_dir_btn.grid(row=0, column=0, sticky='we')
@@ -81,7 +90,7 @@ def dir_select_label_group(frame):
     dest_dir_entry = tk.Entry(grp_dirs, textvariable=str_dest_dir)
     dest_dir_btn = tk.Button(grp_dirs,
                              text='Select Destintation',
-                             command=lambda: cmd_select_src())
+                             command=lambda: cmd_select_dir(str_dest_dir))
     dest_dir_label.grid(row=1, column=1, sticky='e')
     dest_dir_entry.grid(row=1, column=2, columnspan=2, sticky='we',
                         padx=(0, 5))
@@ -116,17 +125,21 @@ def remote_actions_label_group(frame):
                            padx=(1, 15))
 
     # Remote hostname entry
-    src_dir_label = tk.Label(grp_remote_actions, text='Remote Hostname: ', )
-    src_dir_entry = tk.Entry(grp_remote_actions, textvariable=str_hostname)
-    src_dir_label.grid(row=0, column=0, sticky='e')
-    src_dir_entry.grid(row=0, column=1, sticky='we')
+    rm_host_label = tk.Label(grp_remote_actions, text='Remote Hostname: ', )
+    rm_host_entry = tk.Entry(grp_remote_actions, textvariable=str_hostname)
+    rm_host_btn = tk.Button(grp_remote_actions,
+                            text='Remote Hosts',
+                            command=lambda: cmd_select_hostname(frame))
+    rm_host_label.grid(row=0, column=0, sticky='e')
+    rm_host_entry.grid(row=0, column=1, sticky='we')
+    rm_host_btn.grid(row=0, column=2, sticky='we')
 
     # Remote documents folder target location entry
-    src_dir_label = tk.Label(grp_remote_actions, text='Documents ' +
+    rm_docs_label = tk.Label(grp_remote_actions, text='Documents ' +
                                                       'Target Location: ', )
-    src_dir_entry = tk.Entry(grp_remote_actions, textvariable=str_hostname)
-    src_dir_label.grid(row=1, column=0, sticky='e')
-    src_dir_entry.grid(row=1, column=1, sticky='we')
+    rm_docs_entry = tk.Entry(grp_remote_actions, textvariable=str_docs_loc)
+    rm_docs_label.grid(row=1, column=0, sticky='e')
+    rm_docs_entry.grid(row=1, column=1, sticky='we')
 
     grp_remote_actions.grid_remove()
 

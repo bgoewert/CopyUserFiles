@@ -62,6 +62,13 @@ argp.add_argument('-u', '--username', type=str,
                   action='store',
                   required=False)
 
+# Set Documents Target Location
+argp.add_argument('-D', '--documents', type=str,
+                  help='Set the remote user\'s documents folder ' +
+                       'target location for a new machine.',
+                  action='store',
+                  required=False)
+
 
 def getUserRegKey(key, valName):
     """ Returns a user registry key value.
@@ -158,7 +165,7 @@ def setMyDocumentsLocation(newLocation):
     # TODO(Brennan): Log off then back in after setting the new location
 
 
-def getUserName(tries=0):
+def UserName(tries=0):
     """
     Returns the username from command line argument or user input.
     Fails after 5 attempts of retriving a valid user.

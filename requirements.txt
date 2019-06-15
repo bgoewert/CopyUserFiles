@@ -6,3 +6,4 @@ pep8==1.7.1
 autopep8==1.4.4
 PyInstaller==3.4
 pywin32-ctypes==0.2.0
+ldap3==2.6
