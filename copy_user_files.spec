@@ -4,7 +4,6 @@ block_cipher = None
 
 
 a = Analysis(['copy_user_files.py'],
-             pathex=['D:\\Programming\\CopyUserFiles'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -16,21 +15,17 @@ a = Analysis(['copy_user_files.py'],
              cipher=block_cipher,
              noarchive=False)
 pyz = PYZ(a.pure, a.zipped_data,
-             cipher=block_cipher)
+          cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
+          a.binaries,
+          a.zipfiles,
+          a.datas,
           [],
-          exclude_binaries=True,
           name='copy_user_files',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=True )
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=False,
-               upx=True,
-               name='copy_user_files')
+          runtime_tmpdir=None,
+          console=True)
