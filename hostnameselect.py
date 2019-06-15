@@ -99,11 +99,6 @@ class HostnameSelect():
         label_user = Label(lblfra_inputs, text='Domain Admin Username')
         label_pass = Label(lblfra_inputs, text='Domain Admin Password')
 
-        label_server.grid(row=0, column=0, sticky='e', padx=(10, 0))
-        label_domain.grid(row=1, column=0, sticky='e', padx=(10, 0))
-        label_user.grid(row=2, column=0, sticky='e', padx=(10, 0))
-        label_pass.grid(row=3, column=0, sticky='e', padx=(10, 0))
-
         # Entries
         entry_server = Entry(lblfra_inputs)
         entry_domain = Entry(lblfra_inputs)
@@ -114,16 +109,13 @@ class HostnameSelect():
             domain = getfqdn().split('.', 1)[1]
             entry_domain.insert(0, domain)
         except:
-            logging.exception('Failed to get a domain name.')
-
-        entry_server.grid(row=0, column=1, sticky='we', padx=(0, 10))
-        entry_domain.grid(row=1, column=1, sticky='we', padx=(0, 10))
-        entry_user.grid(row=2, column=1, sticky='we', padx=(0, 10))
-        entry_pass.grid(row=3, column=1, sticky='we', padx=(0, 10))
+            dia_login.destroy()
+            return logging.exception('Failed to get a domain name.')
 
         # Stay logged in?
         # check_keepalive = Checkbutton(dia_login, text='Stay logged in?')
 
+        # Action buttons
         button_login = Button(lblfra_inputs,
                               text='Login',
                               command=lambda: (
@@ -137,6 +129,16 @@ class HostnameSelect():
                                text='Cancel',
                                command=lambda: [
                                      dia_login.destroy()])
+
+        label_server.grid(row=0, column=0, sticky='e', padx=(10, 0))
+        label_domain.grid(row=1, column=0, sticky='e', padx=(10, 0))
+        label_user.grid(row=2, column=0, sticky='e', padx=(10, 0))
+        label_pass.grid(row=3, column=0, sticky='e', padx=(10, 0))
+
+        entry_server.grid(row=0, column=1, sticky='we', padx=(0, 10))
+        entry_domain.grid(row=1, column=1, sticky='we', padx=(0, 10))
+        entry_user.grid(row=2, column=1, sticky='we', padx=(0, 10))
+        entry_pass.grid(row=3, column=1, sticky='we', padx=(0, 10))
 
         button_login.grid(row=4, column=0)
         button_cancel.grid(row=4, column=1)
