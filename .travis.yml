@@ -8,7 +8,5 @@ matrix:
       env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
 install:
   - pip install -r requirements.txt
-before_script:
-  - pyinstaller copy_user_files.py -y
-script:
-  - pyinstaller copy_user_files.spec -y
+install:
+  - pyinstaller app.py -y
