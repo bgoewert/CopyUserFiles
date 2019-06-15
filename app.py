@@ -22,8 +22,8 @@
 # SOFTWARE.
 # -----------------------------------------------------------------------------
 
-from src import copyuserfiles
-from src.hostnameselect import HostnameSelect
+import copyuserfiles
+from hostnameselect import HostnameSelect
 import os
 import tkinter as tk
 import tkinter.filedialog as tkFileDialog

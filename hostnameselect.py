@@ -1,6 +1,19 @@
 from tkinter import *
-import ldap3
 from socket import getfqdn
+import ldap3
+import logging
+import os
+
+# Path for log file
+log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                        '{}.log'.format(__name__))
+# Logging config
+logging.basicConfig(level=logging.INFO,
+                    filename=log_path,
+                    filemode='a',
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    datefmt='%d-%m-%y %H:%M:%S')
+logging.getLogger().addHandler(logging.StreamHandler())
 
 
 def hostname_select_dialog():
@@ -97,7 +110,11 @@ class HostnameSelect():
         entry_user = Entry(lblfra_inputs)
         entry_pass = Entry(lblfra_inputs, show='*')
 
-        entry_domain.insert(0, getfqdn().split('.', 1)[1])
+        try:
+            domain = getfqdn().split('.', 1)[1]
+            entry_domain.insert(0, domain)
+        except:
+            logging.exception('Failed to get a domain name.')
 
         entry_server.grid(row=0, column=1, sticky='we', padx=(0, 10))
         entry_domain.grid(row=1, column=1, sticky='we', padx=(0, 10))
