@@ -1,3 +1,25 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2019 Brennan Goewert
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# -----------------------------------------------------------------------------
+
 from tkinter import *
 from socket import getfqdn
 import ldap3
@@ -113,6 +135,7 @@ class HostnameSelect():
             return logging.exception('Failed to get a domain name.')
 
         # Stay logged in?
+        # TODO(Brennan): See if a keep alive is possible
         # check_keepalive = Checkbutton(dia_login, text='Stay logged in?')
 
         # Action buttons
@@ -160,11 +183,14 @@ class HostnameSelect():
             return self.entries
 
     def _ad_computerlist(self):
-        self.conn.search(self.srv.info.naming_contexts[0],
-                         '(&(objectclass=computer)' +
-                         '(!(operatingSystem=*Server*)))',
-                         attributes=['cn', 'dNSHostName'])
-        return self.conn.entries
+        try:
+            self.conn.search(self.srv.info.naming_contexts[0],
+                             '(&(objectclass=computer)' +
+                             '(!(operatingSystem=*Server*)))',
+                             attributes=['cn', 'dNSHostName'])
+            return self.conn.entries
+        except:
+            return logging.exception('Failed to search for computers.')
 
     def get(self, event):
         w = event.widget
