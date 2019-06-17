@@ -69,23 +69,33 @@ argp.add_argument('-D', '--documents', type=str,
                   action='store',
                   required=False)
 
+# Set remote hostname
+argp.add_argument('-H', '--hostname', type=str,
+                  help='Set the remote hostname. ' +
+                       'Do not set this to use local machine.',
+                  action='store',
+                  required=False)
 
-def getUserRegKey(key, valName):
+
+def getUserRegKey(key, valName, target=None):
     """ Returns a user registry key value.
     - key
         The registry key (e.g. 'Software\\Microsoft\\Windows\\Current\
 Version\\Explorer\\User Shell Folders')
     - valName
         The registry value name
+    - target
+        The remote target hostname. If None, use local host.
     """
 
     try:
+        # Connect to the registry
+        reg = winreg.ConnectRegistry(target, winreg.HKEY_CURRENT_USER)
         # Open key to read
-        regKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-                                key, 0, winreg.KEY_READ)
+        regKey = winreg.OpenKey(reg, key, 0, winreg.KEY_READ)
     except WindowsError:
         logging.exception(
-            'Registry Key does not exist in HKEY_CURRENT_USER: {}'.format(key))
+            'User registry key does not exist: {}'.format(key))
         return None
 
     # Get key value and type
@@ -97,7 +107,7 @@ Version\\Explorer\\User Shell Folders')
     return keyValue
 
 
-def setUserRegKey(key, valName, val, keyType=winreg.REG_SZ):
+def setUserRegKey(key, valName, val, keyType=winreg.REG_SZ, target=None):
     """ Sets a user registry key/value pair.
     - key
         The registry key (e.g. 'Software\\Microsoft\\Windows\\Current\
@@ -108,15 +118,18 @@ Version\\Explorer\\User Shell Folders')
         The new value
     - keyType
         Defaults to REG_SZ
+    - target
+        The remote target hostname. If None, use local host.
     """
 
     try:
+        # Connect to the registry
+        reg = winreg.ConnectRegistry(target, winreg.HKEY_CURRENT_USER)
         # Open key to read
-        regKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-                                key, 0, winreg.KEY_ALL_ACCESS)
+        regKey = winreg.OpenKey(reg, key, 0, winreg.KEY_ALL_ACCESS)
     except WindowsError:
         logging.exception(
-            'Registry Key does not exist in HKEY_CURRENT_USER: {}'.format(key))
+            'User registry Key does not exist: {}'.format(key))
         return None
 
     try:
@@ -125,6 +138,7 @@ Version\\Explorer\\User Shell Folders')
     except WindowsError:
         logging.exception('User registry key does not exist: {}'.format(
             key + os.sep + valName))
+        return None
 
     try:
         # Set new key value and get new key value
@@ -146,26 +160,36 @@ Version\\Explorer\\User Shell Folders')
     return keyNewValue
 
 
-def setMyDocumentsLocation(newLocation):
-    """ Set the location for My Documents. """
+def setMyDocumentsLocation(newLocation, hostname=None):
+    """ Set the location for My Documents.
+    - newLocation
+        The actual new target location to set the Documents folder to.
+    - hostname
+        The computer name where to set the new documents target location.
+    """
 
     # Get the current location for My Documents
-    curVal_myDocuments = getUserRegKey(regKey_UserFolderLocations, 'Personal')
+    curVal_myDocuments = getUserRegKey(regKey_UserFolderLocations,
+                                       'Personal',
+                                       hostname)
 
     """ Set the new locations for My Documents
     'This PC' Documents GUID Key Name = {F42EE2D3-909F-4907-8871-4C22FC0BF756}
     Quick Access Documents Key Name = Personal
     """
     newVal_personal = setUserRegKey(regKey_UserFolderLocations,
-                                    'Personal', newLocation)
+                                    'Personal',
+                                    newLocation,
+                                    target=hostname)
     newVal_documents = setUserRegKey(regKey_UserFolderLocations,
                                      '{F42EE2D3-909F-4907-8871-4C22FC0BF756}',
-                                     newLocation)
+                                     newLocation,
+                                     target=hostname)
 
-    # TODO(Brennan): Log off then back in after setting the new location
+    # TODO(Brennan): Log off then back in to PC after setting the new location
 
 
-def UserName(tries=0):
+def getUserName(tries=0):
     """
     Returns the username from command line argument or user input.
     Fails after 5 attempts of retriving a valid user.
@@ -176,36 +200,48 @@ def UserName(tries=0):
 
     # Get any command line arguments
     args = argp.parse_known_args(sys.argv[1:])
-    logging.info('Arguments: {}'.format(args))
 
-    # 5 total attempts before quitting
-    if tries < 5:
-        # If username is set as an argument
-        if args[0].username is not None:
-            username = args[0].username
-            homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
-            if not os.path.exists(homepath):
-                print('That was not a folder...')
-                print(homepath)
-                print('Run the script again to try another user name...')
-                logging.error('User folder not found! - {}'.format(homepath))
-                argparse.ArgumentParser.exit()
-        # If it is not set as an argument, ask for user input
+    try:
+        # 5 total attempts before quitting
+        if tries < 5:
+            # If username is set as an argument
+            if args[0].username is not None:
+                username = args[0].username
+                homepath = (os.path.dirname(os.environ['HOME']) +
+                            os.sep +
+                            username)
+                if not os.path.exists(homepath):
+                    print('That was not a folder...')
+                    print(homepath)
+                    print('Run the script again to try another user name...')
+                    logging.error('User folder not ' +
+                                  'found! - {}'.format(homepath))
+                    argparse.ArgumentParser.exit()
+            # If it is not set as an argument, ask for user input
+            else:
+                username = input('Name of user folder: ')
+                homepath = (os.path.dirname(os.environ['HOME']) +
+                            os.sep +
+                            username)
+                if not os.path.exists(homepath):
+                    print('That was not a folder...')
+                    print(homepath)
+                    logging.error('User folder not ' +
+                                  'found! - {}'.format(homepath))
+                    getUserName(tries + 1)
+
+        # Failure to find folder after 5 attempts
         else:
-            username = input('Name of user folder: ')
-            homepath = os.path.dirname(os.environ['HOME']) + os.sep + username
-            if not os.path.exists(homepath):
-                print('That was not a folder...')
-                print(homepath)
-                logging.error('User folder not found! - {}'.format(homepath))
-                getUserName(tries + 1)
+            print('YOU HAVE TRIED THIS TOO MANY TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
+            logging.warning('Too many attempts to find ' +
+                            'a user folder.')
+            quit()
 
-    # Failure to find folder after 5 attempts
-    else:
-        print('YOU HAVE TRIED THIS TOO MANY TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
-        logging.warning('Too many attempts to find ' +
-                        'a user folder.')
-        quit()
+    except:
+        logging.exception(str('Something really bad happened trying to get ' +
+                              'a folder name, check stacktrace to see the ' +
+                              'logs (＃ﾟДﾟ)').encode('utf-8'))
+        sys.exit(1)
 
     # Return the username if folder was found
     logging.info('User profile selected: %s' % username)
@@ -219,25 +255,33 @@ def getUserSrcDir(tries=0):
 
     args = argp.parse_known_args(sys.argv[1:])
 
-    if tries < 5:
-        if args[0].destination is not None:
-            userDir = os.path.abspath(args[0].destination)
-            if os.path.isfile(userDir):
-                print('That was not a folder...')
-                argparse.ArgumentParser.exit()
+    try:
+        if tries < 5:
+            if args[0].destination is not None:
+                userDir = os.path.abspath(args[0].destination)
+                if os.path.isfile(userDir):
+                    print('That was not a folder...')
+                    argparse.ArgumentParser.exit()
 
+            else:
+                userDir = os.path.abspath(input('User source folder to copy' +
+                                                ' user files/folders from: '))
+                if os.path.isfile(userDir):
+                    print('That was not a folder...')
+                    print(userDir)
+                    getUserSrcDir(tries+1)
         else:
-            userDir = os.path.abspath(input('User source folder to copy' +
-                                            ' user files/folders from: '))
-            if os.path.isfile(userDir):
-                print('That was not a folder...')
-                print(userDir)
-                getUserSrcDir(tries+1)
-    else:
-        print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
-        logging.warning('Too many attempts to select ' +
-                        'a user destination directory.')
-        quit()
+            print('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!! (ノಠ益ಠ)ノ彡┻━┻')
+            logging.warning('Too many attempts to select ' +
+                            'a user destination directory.')
+            quit()
+
+    except:
+        logging.exception(str('Something really bad happened trying to get ' +
+                              'a folder name, check stacktrace to see the ' +
+                              'logs (＃ﾟДﾟ)').encode('utf-8'))
+        sys.exit(1)
+
     logging.info('User source directory selected: %s' % userDir)
     return userDir
 
@@ -245,7 +289,7 @@ def getUserSrcDir(tries=0):
 def getUserDestDir(tries=0):
     """ Returns the user destination directory """
 
-    userDir = None
+    destDir = None
 
     args = argp.parse_known_args(sys.argv[1:])
 
@@ -254,20 +298,96 @@ def getUserDestDir(tries=0):
         if tries < 5:
             # Source Directory is declared as an argument
             if args[0].destination is not None:
-                userDir = os.path.abspath(args[0].destination)
-                if os.path.isfile(userDir):
+                destDir = os.path.abspath(args[0].destination)
+                if os.path.isfile(destDir):
                     logging.warning('That was not a folder...')
                     argparse.ArgumentParser.exit()
 
             # Source Directory is not declared as an argument
             else:
-                userDir = os.path.abspath(input('Destination folder to copy' +
+                destDir = os.path.abspath(input('Destination folder to copy' +
                                                 ' user files/folders to: '))
                 # If destination is a file
-                if os.path.isfile(userDir):
+                if os.path.isfile(destDir):
                     logging.warning('That was not a folder... \n Folder:' +
-                                    userDir)
-                    getUserDir(tries + 1)
+                                    destDir)
+                    getUserDestDir(tries + 1)
+
+        # Failure to find file after 5 attempts
+        else:
+            logging.exception('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!!' +
+                              '(ノಠ益ಠ)ノ彡┻━┻')
+            quit()
+        # Error handling
+    except:
+        logging.exception(str('Something really bad happened trying to get ' +
+                              'a folder name, check stacktrace to see the ' +
+                              'logs (＃ﾟДﾟ)').encode('utf-8'))
+        sys.exit(1)
+
+    logging.info('User destination directory selected: %s' % destDir)
+    return destDir
+
+
+def getDocsLoc():
+    """ Get the new Documents location. """
+
+    args = argp.parse_known_args(sys.argv[1:])
+
+    # Documents Directory is declared as an argument
+    if args[0].documents is not None:
+        docLoc = os.path.abspath(args[0].documents)
+        if os.path.isfile(docLoc):
+            logging.warning('That was not a folder...')
+            argparse.ArgumentParser.exit()
+
+    # Documents Directory is not declared as an argument
+    else:
+        docLoc = os.path.abspath(input('Directory to set as' +
+                                       ' Documents target location: '))
+        # If destination is a file
+        if os.path.isfile(docLoc):
+            logging.warning('That was not a folder... \n Folder:' +
+                            docLoc)
+            setDocsLoc(tries + 1)
+
+    return docLoc
+
+
+def getHostname():
+    """ Get the remote hostname. Leave blank to use local machine."""
+
+    args = argp.parse_known_args(sys.argv[1:])
+
+    # Documents Directory is declared as an argument
+    if args[0].hostname is not None:
+        hostname = args[0].hostname
+
+    # Documents Directory is not declared as an argument
+    else:
+        hostname = input('Hostname: ')
+
+    return hostname
+
+
+def setDocsLoc(tries=0):
+    """ Sets the new Documents target location. """
+
+    args = argp.parse_known_args(sys.argv[1:])
+
+    try:
+        # 5 total attempts before quitting
+        if tries < 5:
+            hostname = getHostname()
+            docLoc = getDocsLoc()
+
+            logging.info('Target Hostname: %s' % hostname)
+            logging.info('Documents target location: %s' % docLoc)
+
+            # Change the documents folder target location to
+            # whatever was specified
+            setMyDocumentsLocation(docLoc, hostname)
+            return docLoc
 
         # Failure to find file after 5 attempts
         else:
@@ -279,9 +399,7 @@ def getUserDestDir(tries=0):
         logging.exception(str('Something really bad happened trying to get ' +
                               'a folder name, check stacktrace to see the ' +
                               'logs (＃ﾟДﾟ)').encode('utf-8'))
-
-    logging.info('User destination directory selected: %s' % userDir)
-    return userDir
+        sys.exit(1)
 
 
 def _findfile(pattern, path):
@@ -325,29 +443,20 @@ def _copyall(src, dst):
     # Any error during the copying process
     except Exception as err:
         logging.exception('Exception occurred while trying to copy')
+        sys.exit(1)
 
 
-def main():
-    """ Main function
-    - getUserName()
-        Gets a username whether by an argument  or by the prompt
-        inside the function and returns the username as a string
-    - getUserSrcDir()
-        Gets a directory to copy all the files from the
-        selected users folder whether by an argument or a prompt inside the
-        function and returns the source directory as a string
-    - getUserDestDir()
-        Get a directory to copy all the files to from the selected
-        users folder whether by an argument or a prompt inside the
-        function and returns the destination directory as a string
+def copyuserfiles(username, dest):
+    """ Copies the files from the profile folder of the defined username to
+    the destination folder. All files and subfolders will be placed in a
+    folder with the same name as the username.
+
+    - username
+        The name of the user profile folder
+    - dest
+        The destination directory to copy the user files to.
+
     """
-
-    print('\n* This script does not copy' +
-          'anything from the downloads folder. *\n')
-
-    # newDocs = input('New Documents target location (leave blank to skip): ')
-    username = getUserName()
-    userDir = getUserDestDir()
 
     # Folders to copy over
     folders = [
@@ -365,16 +474,11 @@ def main():
         r'C:\Users\%s\AppData\Local\Google\Chrome' % username
         ]
 
-    # If documents flag is set,
-    # change the documents folder target location to whatever was specified
-    if newDocs is not '' and newDocs is not None:
-        setMyDocumentsLocation(newDocs)
-
     # Copy all paths in the folders array
     for path in folders:
         path = os.path.abspath(path)
         newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
-                              userDir + os.sep + '%s' % username)
+                              dest + os.sep + '%s' % username)
 
         # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
         if 'Outlook' in path and 'Local' in path:
@@ -389,14 +493,19 @@ def main():
                 _copyall(f, os.path.join(newDst, f))
 
         else:
-            copyall(path, newDst)
+            _copyall(path, newDst)
 
 if __name__ == '__main__':
     try:
         logging.info('****************************************************')
         logging.info('SCRIPT STARTED')
         logging.info('****************************************************')
-        main()
+        logging.info('* This script does not copy anything ' +
+                     'from the downloads folder. *')
+        logging.info('Arguments: {}'.format(
+            argp.parse_known_args(sys.argv[1:])))
+        setDocsLoc()
+        copyuserfiles(getUserName(), getUserDestDir())
         logging.info('****************************************************')
         logging.info('SCRIPT STOPPED')
         logging.info('****************************************************')
