@@ -1,6 +1,41 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2019 Brennan Goewert
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# -----------------------------------------------------------------------------
+
 from tkinter import *
-import ldap3
 from socket import getfqdn
+import ldap3
+import logging
+import os
+
+# Path for log file
+log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                        '{}.log'.format(__name__))
+# Logging config
+logging.basicConfig(level=logging.INFO,
+                    filename=log_path,
+                    filemode='a',
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    datefmt='%d-%m-%y %H:%M:%S')
+logging.getLogger().addHandler(logging.StreamHandler())
 
 
 def hostname_select_dialog():
@@ -86,27 +121,24 @@ class HostnameSelect():
         label_user = Label(lblfra_inputs, text='Domain Admin Username')
         label_pass = Label(lblfra_inputs, text='Domain Admin Password')
 
-        label_server.grid(row=0, column=0, sticky='e', padx=(10, 0))
-        label_domain.grid(row=1, column=0, sticky='e', padx=(10, 0))
-        label_user.grid(row=2, column=0, sticky='e', padx=(10, 0))
-        label_pass.grid(row=3, column=0, sticky='e', padx=(10, 0))
-
         # Entries
         entry_server = Entry(lblfra_inputs)
         entry_domain = Entry(lblfra_inputs)
         entry_user = Entry(lblfra_inputs)
         entry_pass = Entry(lblfra_inputs, show='*')
 
-        entry_domain.insert(0, getfqdn().split('.', 1)[1])
-
-        entry_server.grid(row=0, column=1, sticky='we', padx=(0, 10))
-        entry_domain.grid(row=1, column=1, sticky='we', padx=(0, 10))
-        entry_user.grid(row=2, column=1, sticky='we', padx=(0, 10))
-        entry_pass.grid(row=3, column=1, sticky='we', padx=(0, 10))
+        try:
+            domain = getfqdn().split('.', 1)[1]
+            entry_domain.insert(0, domain)
+        except:
+            dia_login.destroy()
+            return logging.exception('Failed to get a domain name.')
 
         # Stay logged in?
+        # TODO(Brennan): See if a keep alive is possible
         # check_keepalive = Checkbutton(dia_login, text='Stay logged in?')
 
+        # Action buttons
         button_login = Button(lblfra_inputs,
                               text='Login',
                               command=lambda: (
@@ -120,6 +152,16 @@ class HostnameSelect():
                                text='Cancel',
                                command=lambda: [
                                      dia_login.destroy()])
+
+        label_server.grid(row=0, column=0, sticky='e', padx=(10, 0))
+        label_domain.grid(row=1, column=0, sticky='e', padx=(10, 0))
+        label_user.grid(row=2, column=0, sticky='e', padx=(10, 0))
+        label_pass.grid(row=3, column=0, sticky='e', padx=(10, 0))
+
+        entry_server.grid(row=0, column=1, sticky='we', padx=(0, 10))
+        entry_domain.grid(row=1, column=1, sticky='we', padx=(0, 10))
+        entry_user.grid(row=2, column=1, sticky='we', padx=(0, 10))
+        entry_pass.grid(row=3, column=1, sticky='we', padx=(0, 10))
 
         button_login.grid(row=4, column=0)
         button_cancel.grid(row=4, column=1)
@@ -141,11 +183,14 @@ class HostnameSelect():
             return self.entries
 
     def _ad_computerlist(self):
-        self.conn.search(self.srv.info.naming_contexts[0],
-                         '(&(objectclass=computer)' +
-                         '(!(operatingSystem=*Server*)))',
-                         attributes=['cn', 'dNSHostName'])
-        return self.conn.entries
+        try:
+            self.conn.search(self.srv.info.naming_contexts[0],
+                             '(&(objectclass=computer)' +
+                             '(!(operatingSystem=*Server*)))',
+                             attributes=['cn', 'dNSHostName'])
+            return self.conn.entries
+        except:
+            return logging.exception('Failed to search for computers.')
 
     def get(self, event):
         w = event.widget

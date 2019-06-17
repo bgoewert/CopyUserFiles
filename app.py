@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2019 Brennan Goewert
 
@@ -22,8 +20,8 @@
 # SOFTWARE.
 # -----------------------------------------------------------------------------
 
-from src import copyuserfiles
-from src.hostnameselect import HostnameSelect
+import copyuserfiles
+from hostnameselect import HostnameSelect
 import os
 import tkinter as tk
 import tkinter.filedialog as tkFileDialog

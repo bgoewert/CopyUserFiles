@@ -18,10 +18,12 @@ These cannot currently be used if using the executable.
 
 ### Creating an Executable
 
->Requires PyInstaller
+>Using this single executable does not require Python to be installed on a users computer
 
-This will create a single executable located in a dist folder that will be created after the PyInstaller .spec file is ran. Using this single executable does not require Python to be installed on a users computer.
+This will create a .spec file that is ran automatically by PyInstaller and creates a single executable located in a dist folder.
 
 ```shell
-~$ pyinstaller copy_user_files.spec
+~$ pyinstaller --onefile app.py
 ```
+
+[More info on spec files](https://pyinstaller.readthedocs.io/en/stable/spec-files.html)
