@@ -400,7 +400,9 @@ if __name__ == '__main__':
         logging.info('****************************************************')
         logging.info('SCRIPT STOPPED')
         logging.info('****************************************************')
-    except (KeyboardInterrupt, SystemError, SystemExit) as err:
+    except (KeyboardInterrupt,
+            SystemError,
+            SystemExit) as err:
         logging.error("Stopped the script!", exc_info=True)
         logging.info('****************************************************')
         sys.exit(1)

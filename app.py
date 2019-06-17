@@ -62,9 +62,7 @@ def cmd_get_listselect(event):
 
 
 def cmd_select_hostname(frame):
-    host.display_list(frame)
-    print(host.hostname)
-    str_hostname.set(host.hostname)
+    host.get_name(frame, str_hostname)
 
 
 def dir_select_label_group(frame):
