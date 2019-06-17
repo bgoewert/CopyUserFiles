@@ -21,6 +21,7 @@
 # -----------------------------------------------------------------------------
 import tkinter as tk
 from tkinter import *
+from tkinter import messagebox
 from socket import getfqdn
 import ldap3
 import logging
@@ -134,7 +135,6 @@ class HostnameSelect():
             dia_login.destroy()
             return logging.exception('Failed to get a domain name.')
 
-        # Stay logged in?
         # TODO(Brennan): See if a keep alive is possible
         # check_keepalive = Checkbutton(dia_login, text='Stay logged in?')
 
@@ -175,6 +175,8 @@ class HostnameSelect():
                                      authentication=ldap3.NTLM)
 
         if not self.conn.bind():
+            messagebox.showerror('Login Failed',
+                                 'Failed to connect to Active Directory')
             raise ConnectionError('Failed to connect to Active Directory',
                                   self.conn.result)
         else:
@@ -199,8 +201,10 @@ class HostnameSelect():
         w.destroy()
         # return w.selection_set(0)
         self.hostname = value
+        self.dia_list.destroy()
+        return value
 
-    def display_list(self, master):
+    def get_name(self, master, output_var):
 
         self.dia_list = Toplevel(master)
         self.dia_list.title('Select a remote hostname')
@@ -223,4 +227,5 @@ class HostnameSelect():
         self.list_hostnames.grid(row=0, column=0, pady=(10, 10), sticky='nswe')
         self.list_hostnames.selection_set(first=0)
 
-        self.list_hostnames.bind('<<Double-Button-1>>', lambda: self.get)
+        self.list_hostnames.bind(
+            '<Double-Button-1>', lambda e: output_var.set(self.get(e)))
