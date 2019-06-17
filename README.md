@@ -10,20 +10,27 @@ This was made to copy important files and folders from a Windows user profile to
 
 These cannot currently be used if using the executable.
 
-|Command            |Description                                                                                                            |
+|Command Argument   |Description                                                                                                            |
 |-------------------|-----------------------------------------------------------------------------------------------------------------------|
 |-h, --help         | Displays help message                                                                                                 |
 |-d, --destination  | Sets the destination directory (e.g. "C:\\User Folders"). Doing so will allow script to be run silently.              |
+|-D, --documents    | Set the remote user's documents folder target location for a new machine.                                             |
 |-u, --username     | Sets the username for the source directory to copy files out of (e.g. the user "TestUser" -> "C:\\Users\\TestUser")   |
 
-### Creating an Executable
+### Building the Executable
 
->Using this single executable does not require Python to be installed on a users computer
+***Requires Python3 to build***
 
-This will create a .spec file that is ran automatically by PyInstaller and creates a single executable located in a dist folder.
+>Using this single executable ***does not*** require Python to be installed on a users computer
+
+This will create a `.spec` file that is ran automatically by PyInstaller and creates a single executable located in the `dist` folder.
+
+The `requirements.txt` file is required to install first because this will grab all
+dependencies to build the executable.
 
 ```shell
-~$ pyinstaller --onefile app.py
+> pip install -r requirements.txt
+> pyinstaller --onefile app.py
 ```
 
 [More info on spec files](https://pyinstaller.readthedocs.io/en/stable/spec-files.html)

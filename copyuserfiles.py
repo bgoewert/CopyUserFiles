@@ -61,7 +61,6 @@ argp.add_argument('-u', '--username', type=str,
                        'profile folder to copy from.',
                   action='store',
                   required=False)
-
 # Set Documents Target Location
 argp.add_argument('-D', '--documents', type=str,
                   help='Set the remote user\'s documents folder ' +
@@ -401,6 +400,6 @@ if __name__ == '__main__':
         logging.info('SCRIPT STOPPED')
         logging.info('****************************************************')
     except (KeyboardInterrupt, SystemError, SystemExit) as err:
-        logging.error("Stopped the script!", exc_info=True)
-        logging.info('****************************************************')
+        logging.error("Script errored out! Printing stacktrace...", exc_info=True)
+        logging.error('****************************************************')
         sys.exit(1)
