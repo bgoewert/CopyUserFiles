@@ -32,6 +32,7 @@ root.title('Copy User Files')
 root.geometry('720x540')
 root.minsize(300, 300)
 root.resizable(True, True)
+root.focus()
 
 # tkinter string values
 str_src_dir = tk.StringVar()
