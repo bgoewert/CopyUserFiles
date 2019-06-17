@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 # -----------------------------------------------------------------------------
-
+import tkinter as tk
 from tkinter import *
 from socket import getfqdn
 import ldap3
@@ -48,21 +48,21 @@ def hostname_select_dialog():
     dia_hostname_select.grid_columnconfigure(0, weight=1)
     dia_hostname_select.grid_rowconfigure(0, weight=1)
 
-    str_server = tkSimpleDialog.askstring(
+    str_server = tk.tkSimpleDialog.askstring(
         'Input',
         'Domain Controller Hostname/IP',
         parent=dia_hostname_select)
-    str_domain = tkSimpleDialog.askstring(
+    str_domain = tk.tkSimpleDialog.askstring(
         'Input',
         'Domain',
         parent=dia_hostname_select,
         initialvalue=getfqdn().split('.', 1)[1])
-    str_user = tkSimpleDialog.askstring(
+    str_user = tk.tkSimpleDialog.askstring(
         'Input',
         'Username',
         parent=dia_hostname_select,
         initialvalue=os.getlogin())
-    str_pass = tkSimpleDialog.askstring(
+    str_pass = tk.tkSimpleDialog.askstring(
         'Input',
         'Password',
         parent=dia_hostname_select,

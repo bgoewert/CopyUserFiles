@@ -164,7 +164,7 @@ def setMyDocumentsLocation(newLocation):
     # TODO(Brennan): Log off then back in after setting the new location
 
 
-def UserName(tries=0):
+def getUserName(tries=0):
     """
     Returns the username from command line argument or user input.
     Fails after 5 attempts of retriving a valid user.
@@ -266,7 +266,7 @@ def getUserDestDir(tries=0):
                 if os.path.isfile(userDir):
                     logging.warning('That was not a folder... \n Folder:' +
                                     userDir)
-                    getUserDir(tries + 1)
+                    getUserDestDir(tries + 1)
 
         # Failure to find file after 5 attempts
         else:
