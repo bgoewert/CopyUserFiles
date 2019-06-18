@@ -232,10 +232,9 @@ def getUserName(tries=0):
             quit()
 
     except:
-        logging.exception(str('Something really bad happened trying to get ' +
-                              'a folder name, check stacktrace to see the ' +
-                              'logs (＃ﾟДﾟ)').encode('utf-8'))
-        sys.exit(1)
+        logging.exception('Something really bad happened trying to get ' +
+                            'a folder name, check stacktrace to see the ' +
+                            'logs and submit a bug report')
 
     # Return the username if folder was found
     logging.info('User profile selected: %s' % username)
@@ -271,10 +270,9 @@ def getUserSrcDir(tries=0):
             quit()
 
     except:
-        logging.exception(str('Something really bad happened trying to get ' +
-                              'a folder name, check stacktrace to see the ' +
-                              'logs (＃ﾟДﾟ)').encode('utf-8'))
-        sys.exit(1)
+        logging.exception('Something really bad happened trying to get ' +
+                            'a folder name, check stacktrace to see the ' +
+                            'logs and submit a bug report')
 
     logging.info('User source directory selected: %s' % userDir)
     return userDir
@@ -309,43 +307,44 @@ def getUserDestDir(tries=0):
 
         # Failure to find file after 5 attempts
         else:
-            logging.exception('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!!' +
-                              '(ノಠ益ಠ)ノ彡┻━┻')
+            logging.warning('Too many attempts to find a user folder.')
             quit()
+
         # Error handling
     except:
-        logging.exception(str('Something really bad happened trying to get ' +
-                              'a folder name, check stacktrace to see the ' +
-                              'logs (＃ﾟДﾟ)').encode('utf-8'))
-        sys.exit(1)
+        logging.exception('Something really bad happened trying to get ' +
+                            'a folder name, check stacktrace to see the ' +
+                            'logs and submit a bug report')
 
     logging.info('User destination directory selected: %s' % destDir)
     return destDir
 
 
-def getDocsLoc():
+def getDocsLoc(tries=0):
     """ Get the new Documents location. """
 
     args = argp.parse_known_args(sys.argv[1:])
 
     docLoc = ''
 
-    # Documents Directory is declared as an argument
-    if args[0].documents is not None:
-        docLoc = os.path.abspath(args[0].documents)
-        if os.path.isfile(docLoc):
-            logging.warning('That was not a folder...')
-            argparse.ArgumentParser.exit()
+    if tries < 5:
+        # Documents Directory is declared as an argument
+        if args[0].documents is not None:
+            docLoc = os.path.abspath(args[0].documents)
+            if os.path.isfile(docLoc):
+                logging.warning('That was not a folder...')
+                argparse.ArgumentParser.exit()
 
-    # Documents Directory is not declared as an argument
-    else:
-        docLoc = input('Documents target location ' +
-                       '(leave blank to skip): ')
-        # If destination is a file
-        if os.path.isfile(docLoc) and docLoc != '':
-            logging.warning('That was not a folder... \n Folder:' +
-                            docLoc)
-            getDocsLoc(tries + 1)
+        # Documents Directory is not declared as an argument
+        else:
+            docLoc = input('Documents target location ' +
+                           '(leave blank to skip): ')
+            # If destination is a file
+            if os.path.isfile(docLoc) and docLoc != '':
+                logging.warning('That was not a folder... \n Folder:' +
+                                docLoc)
+                logging.info('Trying again...')
+                getDocsLoc(tries + 1)
 
     return docLoc
 
@@ -385,15 +384,13 @@ def setDocsLoc(hostname, documents_location, tries=0):
 
         # Failure to find file after 5 attempts
         else:
-            logging.exception('YOU HAVE ALREADY TRIED THIS FIVE TIMES!!!' +
-                              '(ノಠ益ಠ)ノ彡┻━┻')
-            sys.exit(1)
+            logging.exception('Unable to find folder.')
+            quit()
         # Error handling
     except:
-        logging.exception(str('Something really bad happened trying to get ' +
-                              'a folder name, check stacktrace to see the ' +
-                              'logs (＃ﾟДﾟ)').encode('utf-8'))
-        sys.exit(1)
+        logging.exception('Something really bad happened trying to get ' +
+                            'a folder name, check stacktrace to see the ' +
+                            'logs and submit a bug report')
 
 
 def _findfile(pattern, path):
@@ -437,7 +434,7 @@ def _copyall(src, dst):
     # Any error during the copying process
     except Exception as err:
         logging.exception('Exception occurred while trying to copy')
-        sys.exit(1)
+        quit()
 
 
 def copyuserfiles(username, dest, hostname=None):
@@ -525,4 +522,4 @@ if __name__ == '__main__':
             SystemExit) as err:
         logging.error("Stopped the script!", exc_info=True)
         logging.info('****************************************************')
-        sys.exit(1)
+        quit()

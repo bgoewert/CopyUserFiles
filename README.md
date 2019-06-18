@@ -16,6 +16,7 @@ These cannot currently be used if using the executable.
 |-d, --destination  | Sets the destination directory (e.g. "C:\\User Folders"). Doing so will allow script to be run silently.              |
 |-D, --documents    | Set the remote user's documents folder target location for a new machine.                                             |
 |-u, --username     | Sets the username for the source directory to copy files out of (e.g. the user "TestUser" -> "C:\\Users\\TestUser")   |
+|-H, --hostname     | Set the remote hostname for target destination                                                                        |
 
 ### Building the Executable
 
@@ -33,4 +34,4 @@ dependencies to build the executable.
 > pyinstaller --onefile app.py
 ```
 
-[More info on spec files](https://pyinstaller.readthedocs.io/en/stable/spec-files.html)
+[More info on `.spec` files](https://pyinstaller.readthedocs.io/en/stable/spec-files.html)
