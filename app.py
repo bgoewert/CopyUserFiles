@@ -20,7 +20,7 @@
 # SOFTWARE.
 # -----------------------------------------------------------------------------
 
-import copyuserfiles
+import copyuserfiles as cuf
 from hostnameselect import HostnameSelect
 import os
 import tkinter as tk
@@ -73,6 +73,16 @@ def dir_select_label_group(frame):
     grp_dirs = tk.LabelFrame(frame)
     grp_dirs.grid(row=0, column=0, pady=(0, 5), sticky='we')
     grp_dirs.grid_columnconfigure(2, weight=1)
+
+    # Username
+    src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
+    src_dir_entry = tk.Entry(grp_dirs, textvariable=str_src_dir)
+    src_dir_btn = tk.Button(grp_dirs,
+                            text='Select Source',
+                            command=lambda: cmd_select_dir(str_src_dir))
+    src_dir_label.grid(row=0, column=1, sticky='e')
+    src_dir_entry.grid(row=0, column=2, columnspan=2, sticky='we', padx=(0, 5))
+    src_dir_btn.grid(row=0, column=0, sticky='we')
 
     # Source directory
     """ src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
@@ -152,8 +162,8 @@ def action_label_group(frame):
     btn_start = tk.Button(grp_actions,
                           text='Start',
                           bg='#209920',
-                          width=5,
-                          command=copyuserfiles.copyuserfiles(str_username.get(), str_dest_dir.get(), str_hostname.get()))
+                          width=5)
+    btn_start.bind('<Button-1>', lambda e: cuf.copyuserfiles(str_username.get(), str_dest_dir.get(), str_hostname.get()))
     btn_start.grid(row=0, column=0, sticky='we')
 
     # Stop button
@@ -216,7 +226,7 @@ def footer():
     fra_footer.grid_rowconfigure(0, weight=1)
 
     lbl_version = tk.Label(fra_footer, text='Ver: ' +
-                           copyuserfiles.__version__)
+                           cuf.__version__)
     lbl_version.grid(row=0, column=0)
 
     # Pack all the widgets
@@ -231,6 +241,7 @@ def app():
     body()
 
     footer()
+
 
 if __name__ == "__main__":
     app()

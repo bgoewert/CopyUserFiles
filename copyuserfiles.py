@@ -440,7 +440,7 @@ def _copyall(src, dst):
         sys.exit(1)
 
 
-def copyuserfiles(username, dest, src=None, hostname=None):
+def copyuserfiles(username, dest, hostname=None):
     """ Copies the files from the profile folder of the defined username to
     the destination folder. All files and subfolders will be placed in a
     folder with the same name as the username.
@@ -454,35 +454,37 @@ def copyuserfiles(username, dest, src=None, hostname=None):
 
     # Folders to copy over
     folders = [
-        '\\Documents',
-        '\\Desktop',
-        '\\Favorites',
-        '\\Pictures',
-        '\\Videos',
-        '\\AppData\\Local\\Microsoft\\Outlook',
-        '\\AppData\\Roaming\\Microsoft\\Outlook',
-        '\\AppData\\Roaming\\Microsoft\\Outlook\\RoamCache',
-        '\\AppData\\Roaming\\Microsoft\\Signatures',
-        '\\AppData\\Local\\Mozilla\\Firefox',
-        '\\AppData\\Roaming\\Mozilla\\Firefox',
-        '\\AppData\\Local\\Google\\Chrome'
+        'Documents',
+        'Desktop',
+        'Favorites',
+        'Pictures',
+        'Videos',
+        'AppData\\Local\\Microsoft\\Outlook',
+        'AppData\\Roaming\\Microsoft\\Outlook',
+        'AppData\\Roaming\\Microsoft\\Outlook\\RoamCache',
+        'AppData\\Roaming\\Microsoft\\Signatures',
+        'AppData\\Local\\Mozilla\\Firefox',
+        'AppData\\Roaming\\Mozilla\\Firefox',
+        'AppData\\Local\\Google\\Chrome'
     ]
 
-    if src:
-        for f in folders:
-            folders[folders.index(f)] = f.replace(
-                'C:', '\\\\{}\\C$'.format(src))
+    # Change path for either remote or local
+    for folder in folders:
+        if hostname:
+            folders[folders.index(folder)] = (
+                '\\\\{}\\C$\\Users\\{}\\{}'.format(
+                    hostname, username, folder))
+        else:
+            folders[folders.index(folder)] = (
+                'C:\\Users\\{}\\{}'.format(username, folder))
 
     # Copy all paths in the folders array
-    for path in folders:
-        path = os.path.abspath(path)
+    for folder in folders:
+        path = os.path.abspath(folder)
+        dest = os.path.abspath(dest)
 
-        if hostname:
-            newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
-                                  dest + os.sep + '%s' % username)
-        else:
-            newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
-                                  dest + os.sep + '%s' % username)
+        newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
+                              dest + os.sep + '%s' % username)
 
         # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
         if 'Outlook' in path and 'Local' in path:
