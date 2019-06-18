@@ -26,6 +26,8 @@ import os
 import tkinter as tk
 import tkinter.filedialog as tkFileDialog
 import tkinter.simpledialog as tkSimpleDialog
+import logging
+import sys
 
 root = tk.Tk()
 root.title('Copy User Files')
@@ -46,7 +48,6 @@ bool_copy_downloads = tk.BooleanVar()
 bool_documents_loc = tk.BooleanVar()
 
 host = HostnameSelect(root)
-
 
 def cmd_select_dir(str_var):
     """ Opens a file dialog to select a source directory.
@@ -204,7 +205,6 @@ def body():
     # Pack all the widgets
     fra_body.pack(side='top', fill='both', expand=True)
 
-
 def footer():
     """ Footer frame """
 
@@ -228,7 +228,6 @@ def app():
     body()
 
     footer()
-
 
 if __name__ == "__main__":
     app()
