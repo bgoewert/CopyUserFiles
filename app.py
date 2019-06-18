@@ -49,6 +49,7 @@ bool_documents_loc = tk.BooleanVar()
 
 host = HostnameSelect(root)
 
+
 def cmd_select_dir(str_var):
     """ Opens a file dialog to select a source directory.
     - str_src_dir = tkinter.StringVar() variable
@@ -74,14 +75,14 @@ def dir_select_label_group(frame):
     grp_dirs.grid_columnconfigure(2, weight=1)
 
     # Source directory
-    src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
+    """ src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
     src_dir_entry = tk.Entry(grp_dirs, textvariable=str_src_dir)
     src_dir_btn = tk.Button(grp_dirs,
                             text='Select Source',
                             command=lambda: cmd_select_dir(str_src_dir))
     src_dir_label.grid(row=0, column=1, sticky='e')
     src_dir_entry.grid(row=0, column=2, columnspan=2, sticky='we', padx=(0, 5))
-    src_dir_btn.grid(row=0, column=0, sticky='we')
+    src_dir_btn.grid(row=0, column=0, sticky='we') """
 
     # Destination directory
     dest_dir_label = tk.Label(grp_dirs, text='Destination Directory: ', )
@@ -151,7 +152,8 @@ def action_label_group(frame):
     btn_start = tk.Button(grp_actions,
                           text='Start',
                           bg='#209920',
-                          width=5)
+                          width=5,
+                          command=copyuserfiles.copyuserfiles(str_username.get(), str_dest_dir.get(), str_hostname.get()))
     btn_start.grid(row=0, column=0, sticky='we')
 
     # Stop button
@@ -204,6 +206,7 @@ def body():
 
     # Pack all the widgets
     fra_body.pack(side='top', fill='both', expand=True)
+
 
 def footer():
     """ Footer frame """

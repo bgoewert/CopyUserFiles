@@ -39,53 +39,6 @@ logging.basicConfig(level=logging.INFO,
 logging.getLogger().addHandler(logging.StreamHandler())
 
 
-def hostname_select_dialog():
-
-    dia_hostname_select = tk.Toplevel()
-    dia_hostname_select.title('Select a remote hostname')
-    dia_hostname_select.focus()
-    dia_hostname_select.geometry('200x600')
-    dia_hostname_select.resizable(True, True)
-    dia_hostname_select.grid_columnconfigure(0, weight=1)
-    dia_hostname_select.grid_rowconfigure(0, weight=1)
-
-    str_server = tk.tkSimpleDialog.askstring(
-        'Input',
-        'Domain Controller Hostname/IP',
-        parent=dia_hostname_select)
-    str_domain = tk.tkSimpleDialog.askstring(
-        'Input',
-        'Domain',
-        parent=dia_hostname_select,
-        initialvalue=getfqdn().split('.', 1)[1])
-    str_user = tk.tkSimpleDialog.askstring(
-        'Input',
-        'Username',
-        parent=dia_hostname_select,
-        initialvalue=os.getlogin())
-    str_pass = tk.tkSimpleDialog.askstring(
-        'Input',
-        'Password',
-        parent=dia_hostname_select,
-        show='*')
-
-    comp_list = ad.getComputerList(str_server,
-                                   str_domain,
-                                   str_user,
-                                   str_pass)
-
-    list_hostnames = tk.Listbox(dia_hostname_select, selectmode=tk.SINGLE)
-
-    for comp in comp_list:
-        list_hostnames.insert(tk.END, comp['cn'])
-
-    list_hostnames.grid(row=0, column=0, pady=(10, 10), sticky='nswe')
-    list_hostnames.selection_set(first=0)
-
-    list_hostnames.bind('<<ListboxSelect>>',
-                        lambda e: print(e.widget.selection_set(0)))
-
-
 class HostnameSelect():
     def __init__(self, master):
 
@@ -133,7 +86,8 @@ class HostnameSelect():
             entry_domain.insert(0, domain)
         except:
             dia_login.destroy()
-            return logging.exception('Failed to get a domain name.')
+            logging.exception('Failed to get a domain name.')
+            return
 
         # TODO(Brennan): See if a keep alive is possible
         # check_keepalive = Checkbutton(dia_login, text='Stay logged in?')

@@ -30,11 +30,11 @@ import logging
 import winreg
 from fnmatch import fnmatch
 
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 # Registry Key for User Folders
-regKey_UserFolderLocations = (r'Software\Microsoft\Windows\CurrentVersion' +
-                              r'\Explorer\User Shell Folders')
+regKey_UserFolderLocations = ('Software\\Microsoft\\Windows\\CurrentVersion' +
+                              '\\Explorer\\User Shell Folders')
 
 # Path for log file
 log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -129,15 +129,13 @@ Version\\Explorer\\User Shell Folders')
     except WindowsError:
         logging.exception(
             'User registry Key does not exist: {}'.format(key))
-        return None
 
     try:
         # Get key current value and type
         keyValue, keyType = winreg.QueryValueEx(regKey, valName)
     except WindowsError:
-        logging.exception('User registry key does not exist: {}'.format(
+        logging.info('User registry key does not exist: {}'.format(
             key + os.sep + valName))
-        return None
 
     try:
         # Set new key value and get new key value
@@ -147,14 +145,11 @@ Version\\Explorer\\User Shell Folders')
         logging.exception(
             'An error occurred while ' +
             'setting registry key/value: {}'.format(key))
-        return None
 
     # Close opened key
     winreg.CloseKey(regKey)
 
     logging.info('User registry key set: {}'.format(
-        key + os.sep + valName + ' = ' + keyNewValue))
-    print('User registry key set: {}'.format(
         key + os.sep + valName + ' = ' + keyNewValue))
     return keyNewValue
 
@@ -333,6 +328,8 @@ def getDocsLoc():
 
     args = argp.parse_known_args(sys.argv[1:])
 
+    docLoc = ''
+
     # Documents Directory is declared as an argument
     if args[0].documents is not None:
         docLoc = os.path.abspath(args[0].documents)
@@ -342,13 +339,13 @@ def getDocsLoc():
 
     # Documents Directory is not declared as an argument
     else:
-        docLoc = os.path.abspath(input('Directory to set as' +
-                                       ' Documents target location: '))
+        docLoc = input('Documents target location ' +
+                       '(leave blank to skip): ')
         # If destination is a file
-        if os.path.isfile(docLoc):
+        if os.path.isfile(docLoc) and docLoc != '':
             logging.warning('That was not a folder... \n Folder:' +
                             docLoc)
-            setDocsLoc(tries + 1)
+            getDocsLoc(tries + 1)
 
     return docLoc
 
@@ -366,27 +363,25 @@ def getHostname():
     else:
         hostname = input('Hostname: ')
 
+    logging.info('Target Hostname: {}'.format(hostname))
     return hostname
 
 
-def setDocsLoc(tries=0):
+def setDocsLoc(hostname, documents_location, tries=0):
     """ Sets the new Documents target location. """
-
-    args = argp.parse_known_args(sys.argv[1:])
 
     try:
         # 5 total attempts before quitting
         if tries < 5:
-            hostname = getHostname()
-            docLoc = getDocsLoc()
-
-            logging.info('Target Hostname: %s' % hostname)
-            logging.info('Documents target location: %s' % docLoc)
 
             # Change the documents folder target location to
             # whatever was specified
-            setMyDocumentsLocation(docLoc, hostname)
-            return docLoc
+            if documents_location != '':
+                setMyDocumentsLocation(documents_location, hostname)
+                logging.info('Documents target location: {}'.format(
+                    documents_location))
+
+            return documents_location
 
         # Failure to find file after 5 attempts
         else:
@@ -445,7 +440,7 @@ def _copyall(src, dst):
         sys.exit(1)
 
 
-def copyuserfiles(username, dest):
+def copyuserfiles(username, dest, src=None, hostname=None):
     """ Copies the files from the profile folder of the defined username to
     the destination folder. All files and subfolders will be placed in a
     folder with the same name as the username.
@@ -459,25 +454,35 @@ def copyuserfiles(username, dest):
 
     # Folders to copy over
     folders = [
-        r'C:\Users\%s\Documents' % username,
-        r'C:\Users\%s\Desktop' % username,
-        r'C:\Users\%s\Favorites' % username,
-        r'C:\Users\%s\Pictures' % username,
-        r'C:\Users\%s\Videos' % username,
-        r'C:\Users\%s\AppData\Local\Microsoft\Outlook' % username,
-        r'C:\Users\%s\AppData\Roaming\Microsoft\Outlook' % username,
-        r'C:\Users\%s\AppData\Roaming\Microsoft\Outlook\RoamCache' % username,
-        r'C:\Users\%s\AppData\Roaming\Microsoft\Signatures' % username,
-        r'C:\Users\%s\AppData\Local\Mozilla\Firefox' % username,
-        r'C:\Users\%s\AppData\Roaming\Mozilla\Firefox' % username,
-        r'C:\Users\%s\AppData\Local\Google\Chrome' % username
-        ]
+        '\\Documents',
+        '\\Desktop',
+        '\\Favorites',
+        '\\Pictures',
+        '\\Videos',
+        '\\AppData\\Local\\Microsoft\\Outlook',
+        '\\AppData\\Roaming\\Microsoft\\Outlook',
+        '\\AppData\\Roaming\\Microsoft\\Outlook\\RoamCache',
+        '\\AppData\\Roaming\\Microsoft\\Signatures',
+        '\\AppData\\Local\\Mozilla\\Firefox',
+        '\\AppData\\Roaming\\Mozilla\\Firefox',
+        '\\AppData\\Local\\Google\\Chrome'
+    ]
+
+    if src:
+        for f in folders:
+            folders[folders.index(f)] = f.replace(
+                'C:', '\\\\{}\\C$'.format(src))
 
     # Copy all paths in the folders array
     for path in folders:
         path = os.path.abspath(path)
-        newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
-                              dest + os.sep + '%s' % username)
+
+        if hostname:
+            newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
+                                  dest + os.sep + '%s' % username)
+        else:
+            newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
+                                  dest + os.sep + '%s' % username)
 
         # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
         if 'Outlook' in path and 'Local' in path:
@@ -494,6 +499,7 @@ def copyuserfiles(username, dest):
         else:
             _copyall(path, newDst)
 
+
 if __name__ == '__main__':
     try:
         logging.info('****************************************************')
@@ -503,8 +509,12 @@ if __name__ == '__main__':
                      'from the downloads folder. *')
         logging.info('Arguments: {}'.format(
             argp.parse_known_args(sys.argv[1:])))
-        setDocsLoc()
-        copyuserfiles(getUserName(), getUserDestDir())
+        host = getHostname()
+        setDocsLoc(hostname=host,
+                   documents_location=getDocsLoc())
+        copyuserfiles(username=getUserName(),
+                      dest=getUserDestDir(),
+                      hostname=host)
         logging.info('****************************************************')
         logging.info('SCRIPT STOPPED')
         logging.info('****************************************************')
