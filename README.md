@@ -31,7 +31,7 @@ dependencies to build the executable.
 
 ```shell
 > pip install -r requirements.txt
-> pyinstaller --onefile app.py
+> pyinstaller --onefile --nosonsole app.py
 ```
 
 [More info on `.spec` files](https://pyinstaller.readthedocs.io/en/stable/spec-files.html)
