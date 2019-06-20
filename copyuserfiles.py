@@ -31,7 +31,7 @@ import winreg
 from fnmatch import fnmatch
 import __main__
 
-__version__ = '1.3.0'
+__version__ = '2.0.0'
 
 # Registry Key for User Folders
 regKey_UserFolderLocations = ('Software\\Microsoft\\Windows\\CurrentVersion' +
