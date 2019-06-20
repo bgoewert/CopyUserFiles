@@ -233,8 +233,8 @@ def getUserName(tries=0):
 
     except:
         logging.exception('Something really bad happened trying to get ' +
-                            'a folder name, check stacktrace to see the ' +
-                            'logs and submit a bug report')
+                          'a folder name, check stacktrace to see the ' +
+                          'logs and submit a bug report')
 
     # Return the username if folder was found
     logging.info('User profile selected: %s' % username)
@@ -271,8 +271,8 @@ def getUserSrcDir(tries=0):
 
     except:
         logging.exception('Something really bad happened trying to get ' +
-                            'a folder name, check stacktrace to see the ' +
-                            'logs and submit a bug report')
+                          'a folder name, check stacktrace to see the ' +
+                          'logs and submit a bug report')
 
     logging.info('User source directory selected: %s' % userDir)
     return userDir
@@ -313,8 +313,8 @@ def getUserDestDir(tries=0):
         # Error handling
     except:
         logging.exception('Something really bad happened trying to get ' +
-                            'a folder name, check stacktrace to see the ' +
-                            'logs and submit a bug report')
+                          'a folder name, check stacktrace to see the ' +
+                          'logs and submit a bug report')
 
     logging.info('User destination directory selected: %s' % destDir)
     return destDir
@@ -389,8 +389,8 @@ def setDocsLoc(hostname, documents_location, tries=0):
         # Error handling
     except:
         logging.exception('Something really bad happened trying to get ' +
-                            'a folder name, check stacktrace to see the ' +
-                            'logs and submit a bug report')
+                          'a folder name, check stacktrace to see the ' +
+                          'logs and submit a bug report')
 
 
 def _findfile(pattern, path):
@@ -426,8 +426,8 @@ def _copyall(src, dst):
                     logging.info('Destination directory created: %s' % dst)
 
                 # Copies the files
-                nf_path = os.path.join(dst, f)
-                f_path = os.path.join(root, f)
+                nf_path = os.path.join(dst, f)  # new file path
+                f_path = os.path.join(root, f)  # file to copy from
                 shutil.copy(f_path, nf_path)
                 logging.info('New file copied: %s' % str(nf_path))
 

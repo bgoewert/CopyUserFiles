@@ -22,6 +22,7 @@
 
 import copyuserfiles as cuf
 from hostnameselect import HostnameSelect
+from usernameselect import UsernameSelect
 import os
 import tkinter as tk
 import tkinter.filedialog as tkFileDialog
@@ -39,6 +40,7 @@ root.focus()
 # tkinter string values
 str_src_dir = tk.StringVar()
 str_dest_dir = tk.StringVar()
+str_aduser = tk.StringVar()
 str_username = tk.StringVar()
 str_hostname = tk.StringVar()
 str_docs_loc = tk.StringVar()
@@ -68,6 +70,10 @@ def cmd_select_hostname(frame):
     host.get_name(frame, str_hostname)
 
 
+def cmd_select_username(frame):
+    UsernameSelect(frame, str_username, str_hostname.get())
+
+
 def dir_select_label_group(frame):
     # Directory selection group
     grp_dirs = tk.LabelFrame(frame)
@@ -75,11 +81,11 @@ def dir_select_label_group(frame):
     grp_dirs.grid_columnconfigure(2, weight=1)
 
     # Username
-    src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
-    src_dir_entry = tk.Entry(grp_dirs, textvariable=str_src_dir)
+    src_dir_label = tk.Label(grp_dirs, text='Username: ', )
+    src_dir_entry = tk.Entry(grp_dirs, textvariable=str_username)
     src_dir_btn = tk.Button(grp_dirs,
-                            text='Select Source',
-                            command=lambda: cmd_select_dir(str_src_dir))
+                            text='Select Username',
+                            command=lambda: cmd_select_username(frame))
     src_dir_label.grid(row=0, column=1, sticky='e')
     src_dir_entry.grid(row=0, column=2, columnspan=2, sticky='we', padx=(0, 5))
     src_dir_btn.grid(row=0, column=0, sticky='we')
@@ -163,7 +169,10 @@ def action_label_group(frame):
                           text='Start',
                           bg='#209920',
                           width=5)
-    btn_start.bind('<Button-1>', lambda e: cuf.copyuserfiles(str_username.get(), str_dest_dir.get(), str_hostname.get()))
+    btn_start.bind('<Button-1>',
+                   lambda e: cuf.copyuserfiles(str_username.get(),
+                                               str_dest_dir.get(),
+                                               str_hostname.get()))
     btn_start.grid(row=0, column=0, sticky='we')
 
     # Stop button

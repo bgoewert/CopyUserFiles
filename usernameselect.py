@@ -21,11 +21,62 @@
 # -----------------------------------------------------------------------------
 
 from tkinter import *
-import os
+import subprocess
 import logging
 
 
 class UsernameSelect():
-    def __init__(self, master):
+    def __init__(self, master, output_var, remote_host=None):
 
-        self.username = None
+        self.username = str()
+        self.remote_host = remote_host
+        self.results = None
+
+        self.get_users(master, output_var, remote_host)
+
+    def get_users(self, master, output_var, host=None):
+
+        self.dia_list = Toplevel(master)
+        self.dia_list.title('Select a username from the computer')
+        self.dia_list.geometry('200x600')
+        self.dia_list.resizable(True, True)
+        self.dia_list.grid_columnconfigure(0, weight=1)
+        self.dia_list.grid_rowconfigure(0, weight=1)
+        self.dia_list.focus()
+
+        self.list_usernames = Listbox(self.dia_list, selectmode=SINGLE)
+
+        if host:
+            self.results = subprocess.run(
+                ['wmic', '/node:{}'.format(host),
+                 'UserAccount', 'get', 'Name'],
+                stdout=subprocess.PIPE).stdout.decode('utf-8').split()
+        else:
+            self.results = subprocess.run(
+                ['wmic', 'UserAccount', 'get', 'Name'],
+                stdout=subprocess.PIPE).stdout.decode('utf-8').split()
+
+        for r in self.results:
+            if r in ['Name',
+                     'Administrator',
+                     'DefaultAccount',
+                     'Guest',
+                     'WDAGUtilityAccount']:
+                continue
+            self.list_usernames.insert(END, r)
+
+        self.list_usernames.grid(row=0, column=0, pady=(10, 10), sticky='nswe')
+        self.list_usernames.selection_set(first=0)
+
+        self.list_usernames.bind(
+            '<Double-Button-1>', lambda e: output_var.set(self.get(e)))
+
+    def get(self, event):
+        w = event.widget
+        index = int(w.curselection()[0])
+        value = w.get(index)
+        w.destroy()
+        # return w.selection_set(0)
+        self.username = value
+        self.dia_list.destroy()
+        return value
