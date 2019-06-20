@@ -45,12 +45,7 @@ class HostnameSelect():
         self.conn = None
         self.entries = list()
         self.hostname = str()
-        self.__setattr__('entries', list())
-
-        if len(self.__getattribute__('entries')) == 0:
-            self._ad_login(master)
-        else:
-            self.entries = self.__getattribute__('entries')
+        self._ad_login(master)
 
     def _ad_login(self, master):
 
@@ -143,7 +138,9 @@ class HostnameSelect():
                              '(&(objectclass=computer)' +
                              '(!(operatingSystem=*Server*)))',
                              attributes=['cn', 'dNSHostName'])
-            return self.conn.entries
+            entries = self.conn.entries
+            entries.sort()
+            return entries
         except:
             return logging.exception('Failed to search for computers.')
 
@@ -170,8 +167,6 @@ class HostnameSelect():
         self.list_hostnames = Listbox(self.dia_list, selectmode=SINGLE)
 
         if len(self.entries) > 0:
-            self.__setattr__('entries', self.entries)
-
             for entry in self.entries:
                 self.list_hostnames.insert(END, entry['cn'])
         else:

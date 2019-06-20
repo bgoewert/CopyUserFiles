@@ -80,15 +80,25 @@ def dir_select_label_group(frame):
     grp_dirs.grid(row=0, column=0, pady=(0, 5), sticky='we')
     grp_dirs.grid_columnconfigure(2, weight=1)
 
+    # Remote hostname entry
+    rm_host_label = tk.Label(grp_dirs, text='Remote Hostname: ', )
+    rm_host_entry = tk.Entry(grp_dirs, textvariable=str_hostname)
+    rm_host_btn = tk.Button(grp_dirs,
+                            text='Select Host',
+                            command=lambda: cmd_select_hostname(frame))
+    rm_host_label.grid(row=0, column=1, sticky='e')
+    rm_host_entry.grid(row=0, column=2, sticky='we')
+    rm_host_btn.grid(row=0, column=0, sticky='we')
+
     # Username
     src_dir_label = tk.Label(grp_dirs, text='Username: ', )
     src_dir_entry = tk.Entry(grp_dirs, textvariable=str_username)
     src_dir_btn = tk.Button(grp_dirs,
                             text='Select Username',
                             command=lambda: cmd_select_username(frame))
-    src_dir_label.grid(row=0, column=1, sticky='e')
-    src_dir_entry.grid(row=0, column=2, columnspan=2, sticky='we', padx=(0, 5))
-    src_dir_btn.grid(row=0, column=0, sticky='we')
+    src_dir_label.grid(row=1, column=1, sticky='e')
+    src_dir_entry.grid(row=1, column=2, columnspan=2, sticky='we', padx=(0, 5))
+    src_dir_btn.grid(row=1, column=0, sticky='we')
 
     # Source directory
     """ src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
@@ -106,10 +116,10 @@ def dir_select_label_group(frame):
     dest_dir_btn = tk.Button(grp_dirs,
                              text='Select Destintation',
                              command=lambda: cmd_select_dir(str_dest_dir))
-    dest_dir_label.grid(row=1, column=1, sticky='e')
-    dest_dir_entry.grid(row=1, column=2, columnspan=2, sticky='we',
+    dest_dir_label.grid(row=2, column=1, sticky='e')
+    dest_dir_entry.grid(row=2, column=2, columnspan=2, sticky='we',
                         padx=(0, 5))
-    dest_dir_btn.grid(row=1, column=0, sticky='we')
+    dest_dir_btn.grid(row=2, column=0, sticky='we')
 
 
 def remote_actions_label_group(frame):
@@ -140,14 +150,14 @@ def remote_actions_label_group(frame):
                            padx=(1, 15))
 
     # Remote hostname entry
-    rm_host_label = tk.Label(grp_remote_actions, text='Remote Hostname: ', )
+    """ rm_host_label = tk.Label(grp_remote_actions, text='Remote Hostname: ', )
     rm_host_entry = tk.Entry(grp_remote_actions, textvariable=str_hostname)
     rm_host_btn = tk.Button(grp_remote_actions,
                             text='Remote Hosts',
                             command=lambda: cmd_select_hostname(frame))
     rm_host_label.grid(row=0, column=0, sticky='e')
     rm_host_entry.grid(row=0, column=1, sticky='we')
-    rm_host_btn.grid(row=0, column=2, sticky='we')
+    rm_host_btn.grid(row=0, column=2, sticky='we') """
 
     # Remote documents folder target location entry
     rm_docs_label = tk.Label(grp_remote_actions, text='Documents ' +
