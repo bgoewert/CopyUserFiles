@@ -25,9 +25,10 @@ from socket import getfqdn
 import ldap3
 import logging
 import os
+import __main__
 
 # Path for log file
-log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+log_path = os.path.join(os.path.dirname(os.path.realpath(__main__.__file__)),
                         '{}.log'.format(__name__))
 # Logging config
 logging.basicConfig(level=logging.INFO,

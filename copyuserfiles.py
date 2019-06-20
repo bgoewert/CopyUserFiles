@@ -29,6 +29,7 @@ import argparse
 import logging
 import winreg
 from fnmatch import fnmatch
+import __main__
 
 __version__ = '1.3.0'
 
@@ -37,7 +38,7 @@ regKey_UserFolderLocations = ('Software\\Microsoft\\Windows\\CurrentVersion' +
                               '\\Explorer\\User Shell Folders')
 
 # Path for log file
-log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+log_path = os.path.join(os.path.dirname(os.path.realpath(__main__.__file__)),
                         '{}.log'.format(__name__))
 # Logging config
 logging.basicConfig(level=logging.INFO,
