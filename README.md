@@ -20,8 +20,6 @@ These cannot currently be used if using the executable.
 
 ### Building the Executable
 
-***Requires Python3 to build***
-
 >Using this single executable ***does not*** require Python to be installed on a users computer
 
 This will create a `.spec` file that is ran automatically by PyInstaller and creates a single executable located in the `dist` folder.
