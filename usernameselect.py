@@ -55,8 +55,11 @@ class UsernameSelect():
             self.results = subprocess.run(
                 ['wmic', 'UserAccount', 'get', 'Name'],
                 stdout=subprocess.PIPE).stdout.decode('utf-8').split()
+            results = self.results
+            results.sort()
+            return results
 
-        for r in self.results:
+        for r in results:
             if r in ['Name',
                      'Administrator',
                      'DefaultAccount',
