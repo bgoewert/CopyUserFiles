@@ -29,6 +29,7 @@ import tkinter.filedialog as tkFileDialog
 import tkinter.simpledialog as tkSimpleDialog
 import logging
 import sys
+import ctypes
 
 root = tk.Tk()
 root.title('Copy User Files')
@@ -51,6 +52,13 @@ bool_documents_loc = tk.BooleanVar()
 
 host = HostnameSelect(root)
 
+
+def is_admin():
+    try:
+        # Requests administrator permission for the python script
+        return ctypes.windll.shell32.IsUserAdmin()
+    except:
+        return False
 
 def cmd_select_dir(str_var):
     """ Opens a file dialog to select a source directory.
@@ -263,5 +271,8 @@ def app():
 
 
 if __name__ == "__main__":
-    app()
-    root.mainloop()
+    if is_admin():
+        app()
+        root.mainloop()
+    else:
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
