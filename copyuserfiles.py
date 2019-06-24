@@ -435,10 +435,9 @@ def _copyall(src, dst):
     # Any error during the copying process
     except Exception as err:
         logging.exception('Exception occurred while trying to copy')
-        quit()
 
 
-def copyuserfiles(username, dest, hostname=None):
+def copyuserfiles(dest, src=None, username=None, hostname=None):
     """ Copies the files from the profile folder of the defined username to
     the destination folder. All files and subfolders will be placed in a
     folder with the same name as the username.
@@ -468,10 +467,21 @@ def copyuserfiles(username, dest, hostname=None):
 
     # Change path for either remote or local
     for folder in folders:
-        if hostname:
+        if hostname and not src:
             folders[folders.index(folder)] = (
                 '\\\\{}\\C$\\Users\\{}\\{}'.format(
                     hostname, username, folder))
+        elif src and not hostname:
+            if (os.path.exists(src)):
+                # If the src is actually a folder for a user
+                username = os.path.basename(src)
+                folders[folders.index(folder)] = (
+                    '{}\\{}'.format(
+                        src, folder))
+            else:
+                logging.error(
+                    'The source given was not for a valid folder of a user.')
+                sys.exit(1)
         else:
             folders[folders.index(folder)] = (
                 'C:\\Users\\{}\\{}'.format(username, folder))

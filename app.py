@@ -91,24 +91,25 @@ def dir_select_label_group(frame):
     rm_host_btn.grid(row=0, column=0, sticky='we')
 
     # Username
-    src_dir_label = tk.Label(grp_dirs, text='Username: ', )
-    src_dir_entry = tk.Entry(grp_dirs, textvariable=str_username)
-    src_dir_btn = tk.Button(grp_dirs,
-                            text='Select Username',
-                            command=lambda: cmd_select_username(frame))
-    src_dir_label.grid(row=1, column=1, sticky='e')
-    src_dir_entry.grid(row=1, column=2, columnspan=2, sticky='we', padx=(0, 5))
-    src_dir_btn.grid(row=1, column=0, sticky='we')
+    username_label = tk.Label(grp_dirs, text='Username: ', )
+    username_entry = tk.Entry(grp_dirs, textvariable=str_username)
+    username_btn = tk.Button(grp_dirs,
+                             text='Select Username',
+                             command=lambda: cmd_select_username(frame))
+    username_label.grid(row=1, column=1, sticky='e')
+    username_entry.grid(row=1, column=2, columnspan=2,
+                        sticky='we', padx=(0, 5))
+    username_btn.grid(row=1, column=0, sticky='we')
 
     # Source directory
-    """ src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
+    src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
     src_dir_entry = tk.Entry(grp_dirs, textvariable=str_src_dir)
     src_dir_btn = tk.Button(grp_dirs,
                             text='Select Source',
                             command=lambda: cmd_select_dir(str_src_dir))
-    src_dir_label.grid(row=0, column=1, sticky='e')
-    src_dir_entry.grid(row=0, column=2, columnspan=2, sticky='we', padx=(0, 5))
-    src_dir_btn.grid(row=0, column=0, sticky='we') """
+    src_dir_label.grid(row=2, column=1, sticky='e')
+    src_dir_entry.grid(row=2, column=2, columnspan=2, sticky='we', padx=(0, 5))
+    src_dir_btn.grid(row=2, column=0, sticky='we')
 
     # Destination directory
     dest_dir_label = tk.Label(grp_dirs, text='Destination Directory: ', )
@@ -116,10 +117,10 @@ def dir_select_label_group(frame):
     dest_dir_btn = tk.Button(grp_dirs,
                              text='Select Destintation',
                              command=lambda: cmd_select_dir(str_dest_dir))
-    dest_dir_label.grid(row=2, column=1, sticky='e')
-    dest_dir_entry.grid(row=2, column=2, columnspan=2, sticky='we',
+    dest_dir_label.grid(row=3, column=1, sticky='e')
+    dest_dir_entry.grid(row=3, column=2, columnspan=2, sticky='we',
                         padx=(0, 5))
-    dest_dir_btn.grid(row=2, column=0, sticky='we')
+    dest_dir_btn.grid(row=3, column=0, sticky='we')
 
 
 def remote_actions_label_group(frame):
@@ -180,8 +181,9 @@ def action_label_group(frame):
                           bg='#209920',
                           width=5)
     btn_start.bind('<Button-1>',
-                   lambda e: cuf.copyuserfiles(str_username.get(),
-                                               str_dest_dir.get(),
+                   lambda e: cuf.copyuserfiles(str_dest_dir.get(),
+                                               str_src_dir.get(),
+                                               str_username.get(),
                                                str_hostname.get()))
     btn_start.grid(row=0, column=0, sticky='we')
 
