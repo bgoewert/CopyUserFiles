@@ -60,6 +60,7 @@ def is_admin():
     except:
         return False
 
+
 def cmd_select_dir(str_var):
     """ Opens a file dialog to select a source directory.
     - str_src_dir = tkinter.StringVar() variable
@@ -277,4 +278,5 @@ if __name__ == "__main__":
         app()
         root.mainloop()
     else:
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, __file__, None, 1)
