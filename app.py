@@ -56,7 +56,7 @@ host = HostnameSelect(root)
 def is_admin():
     try:
         # Requests administrator permission for the python script
-        return ctypes.windll.shell32.IsUserAdmin()
+        return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
 
@@ -278,5 +278,6 @@ if __name__ == "__main__":
         app()
         root.mainloop()
     else:
+        print('nope')
         ctypes.windll.shell32.ShellExecuteW(
             None, "runas", sys.executable, __file__, None, 1)
