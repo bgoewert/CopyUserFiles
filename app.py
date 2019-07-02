@@ -31,6 +31,7 @@ import logging
 import sys
 import ctypes
 
+# tkinter root vars
 root = tk.Tk()
 root.title('Copy User Files')
 root.geometry('720x540')
@@ -50,8 +51,8 @@ str_docs_loc = tk.StringVar()
 bool_copy_downloads = tk.BooleanVar()
 bool_documents_loc = tk.BooleanVar()
 
+# ldap vars
 host = HostnameSelect(root)
-
 
 def is_admin():
     try:
@@ -274,10 +275,12 @@ def app():
 
 
 if __name__ == "__main__":
+    logging.info("Requesting user elevation...")
     if is_admin():
+        logging.info("User authenticated! Proceeding through the applicaiton...")
         app()
         root.mainloop()
     else:
-        print('nope')
+        logging.error("User not authenticated! Exiting now...")
         ctypes.windll.shell32.ShellExecuteW(
             None, "runas", sys.executable, __file__, None, 1)
