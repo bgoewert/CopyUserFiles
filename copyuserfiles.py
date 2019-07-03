@@ -44,7 +44,7 @@ log_path = os.path.join(os.path.dirname(os.path.realpath(__main__.__file__)),
 logging.basicConfig(level=logging.INFO,
                     filename=log_path,
                     filemode='a',
-                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    format='%(asctime)s - %(levelname)s - %(funcName)s - %(message)s',
                     datefmt='%d-%m-%y %H:%M:%S')
 logging.getLogger().addHandler(logging.StreamHandler())
 
@@ -512,9 +512,6 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
 
 if __name__ == '__main__':
     try:
-        logging.info('****************************************************')
-        logging.info('SCRIPT STARTED')
-        logging.info('****************************************************')
         logging.info('* This script does not copy anything ' +
                      'from the downloads folder. *')
         logging.info('Arguments: {}'.format(
@@ -525,12 +522,8 @@ if __name__ == '__main__':
         copyuserfiles(username=getUserName(),
                       dest=getUserDestDir(),
                       hostname=host)
-        logging.info('****************************************************')
-        logging.info('SCRIPT STOPPED')
-        logging.info('****************************************************')
     except (KeyboardInterrupt,
             SystemError,
             SystemExit) as err:
         logging.error("Stopped the script!", exc_info=True)
-        logging.info('****************************************************')
         quit()

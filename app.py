@@ -30,6 +30,8 @@ import tkinter.simpledialog as tkSimpleDialog
 import logging
 import sys
 import ctypes
+import platform
+import time
 
 # tkinter root vars
 root = tk.Tk()
@@ -54,11 +56,15 @@ bool_documents_loc = tk.BooleanVar()
 # ldap vars
 host = HostnameSelect(root)
 
+# Checks to see if user is administrator
 def is_admin():
+    logging.info('Checking user privledges...')
     try:
         # Requests administrator permission for the python script
+        logging.info('Checking if user is admin...')
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
+        logging.info('User is not admin!')
         return False
 
 
@@ -263,24 +269,49 @@ def footer():
     # Pack all the widgets
     fra_footer.pack(side='bottom')
 
+def init():
+    logging.info('Started application at: ' + time.ctime())
+    logging.info('-===========- [ INIT ] -===========-')
+    logging.info('-==- [ SYS INFO ] -==-')
+    logging.info('system    : ' + platform.system())
+    logging.info('release   : ' + platform.release())
+    logging.info('version   : ' + platform.version())
+    logging.info('node      : ' + platform.node())
+    logging.info('machine   : ' + platform.machine())
+    logging.info('processor : ' + platform.processor())
+    logging.info('-==- [ SYS INFO ] -==-')
+    logging.info('-==- [ APP INFO ] -==-')
+    logging.info('python    : ' + platform.python_version())
+    logging.info('version   : ' + cuf.__version__)
+    logging.info('-==- [ APP INFO ] -==-')
+    logging.info('-===========- [ INIT ] -===========-')
+    if is_admin():
+        logging.info('User is admin! Proceeding through the application...')
+        main()
+    else:
+        logging.error('User is not admin! Prompting UAC elevation...')
+        logging.error('This will restart the application!')
+        logging.error('Stopped application at: ' + time.ctime())
+        ctypes.windll.shell32.ShellExecuteW(
+            None, 'runas', sys.executable, __file__, None, 1)
 
 def app():
     """ The main UI and application """
 
     header()
+    logging.info('Header created!')
 
     body()
+    logging.info('Body created!')
 
     footer()
+    logging.info('Footer created!')
 
+def main():
+    logging.info('Starting GUI...')
+    app()
+    logging.info('GUI started!')
+    root.mainloop()
 
 if __name__ == "__main__":
-    logging.info("Requesting user elevation...")
-    if is_admin():
-        logging.info("User authenticated! Proceeding through the applicaiton...")
-        app()
-        root.mainloop()
-    else:
-        logging.error("User not authenticated! Exiting now...")
-        ctypes.windll.shell32.ShellExecuteW(
-            None, "runas", sys.executable, __file__, None, 1)
+    init()

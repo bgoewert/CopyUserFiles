@@ -27,21 +27,10 @@ import logging
 import os
 import __main__
 
-# Path for log file
-log_path = os.path.join(os.path.dirname(os.path.realpath(__main__.__file__)),
-                        '{}.log'.format(__name__))
-# Logging config
-logging.basicConfig(level=logging.INFO,
-                    filename=log_path,
-                    filemode='a',
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    datefmt='%d-%m-%y %H:%M:%S')
-logging.getLogger().addHandler(logging.StreamHandler())
-
-
 class HostnameSelect():
     def __init__(self, master):
 
+        logging.info('Initializing HostnameSelect...')
         self.server = None
         self.conn = None
         self.entries = list()
@@ -75,6 +64,8 @@ class HostnameSelect():
         entry_domain = Entry(lblfra_inputs)
         entry_user = Entry(lblfra_inputs)
         entry_pass = Entry(lblfra_inputs, show='*')
+
+        logging.info('Showing AD login prompt!')
 
         try:
             domain = getfqdn().split('.', 1)[1]
@@ -117,6 +108,7 @@ class HostnameSelect():
 
     def _ad_connect(self, server, domain, usr, pwd):
 
+        logging.info('Connecting to domain...')
         self.srv = ldap3.Server(server, get_info=ldap3.ALL)
         self.conn = ldap3.Connection(self.srv,
                                      user='{}\\{}'.format(domain, usr),
@@ -124,26 +116,31 @@ class HostnameSelect():
                                      authentication=ldap3.NTLM)
 
         if not self.conn.bind():
+            logging.error('Could not connect to domain!')
             messagebox.showerror('Login Failed',
                                  'Failed to connect to Active Directory')
             raise ConnectionError('Failed to connect to Active Directory',
                                   self.conn.result)
         else:
+            logging.info('Connected to domain!')
             self.entries = self._ad_computerlist()
             self.conn.unbind()
             return self.entries
 
     def _ad_computerlist(self):
         try:
+            logging.info('Searching for computers on AD...')
             self.conn.search(self.srv.info.naming_contexts[0],
                              '(&(objectclass=computer)' +
                              '(!(operatingSystem=*Server*)))',
                              attributes=['cn', 'dNSHostName'])
             entries = self.conn.entries
             entries.sort()
+            for entry in entries:
+                logging.info('Found "' + str(entry['cn']) + '" in AD!')
             return entries
         except:
-            return logging.exception('Failed to search for computers.')
+            return logging.exception('Failed to search for computers in AD!')
 
     def get(self, event):
         w = event.widget
@@ -153,6 +150,7 @@ class HostnameSelect():
         # return w.selection_set(0)
         self.hostname = value
         self.dia_list.destroy()
+        logging.info('Selected "' + value + '"!')
         return value
 
     def get_name(self, master, output_var):
@@ -168,9 +166,11 @@ class HostnameSelect():
         self.list_hostnames = Listbox(self.dia_list, selectmode=SINGLE)
 
         if len(self.entries) > 0:
+            logging.info('Showing hostnames!')
             for entry in self.entries:
                 self.list_hostnames.insert(END, entry['cn'])
         else:
+            logging.info('There are no hostnames to show!')
             self.list_hostnames.insert(END, 'Nothing to see here...')
 
         self.list_hostnames.grid(row=0, column=0, pady=(10, 10), sticky='nswe')
