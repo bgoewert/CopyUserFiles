@@ -269,6 +269,13 @@ def footer():
     # Pack all the widgets
     fra_footer.pack(side='bottom')
 
+def check_python():
+    if sys.version_info[0] is 3:
+        logging.info('Running correct version of python!')
+    else:
+        logging.warning('Running older version of python!')
+        logging.warning('Some features might not work with older versions!')
+
 def init():
     logging.info('Started application at: ' + time.ctime())
     logging.info('-===========- [ INIT ] -===========-')
