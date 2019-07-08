@@ -31,9 +31,65 @@ class UsernameSelect():
         logging.info('Initializing UsernameSelect...')
         self.username = str()
         self.remote_host = remote_host
-        self.results = None
+        self.results = list()
 
         self.get_users(master, output_var, remote_host)
+
+    # If connected to a domain, this will pull all users from the domain.
+    # This is a non-issue because how domains are set up and how domain users
+    # are not technically local users. However this will also try and find any
+    # local users on the machine anyway.
+    def _user_list(self):
+        if host:
+            logging.info('Showing users from "' + host + '"...')
+            self.results = subprocess.run(
+                ['wmic', '/node:{}'.format(host),
+                 'UserAccount', 'get', 'Name,LocalAccount'],
+                stdout=subprocess.PIPE).stdout.decode('utf-8').split()
+            results = self.results
+            for result in results:
+                logging.info('Found "' + str(result) + '" user on "' +
+                             str(host) + '" !')
+            results.sort()
+            return results
+
+        # If no connected to a domain, this will have all the local users
+        # pulled.
+        else:
+            logging.info('Showing local users...')
+            self.results = subprocess.run(
+                ['wmic', 'UserAccount', 'get', 'Name,LocalAccount'],
+                stdout=subprocess.PIPE).stdout.decode('utf-8').split()
+            results = self.results
+            for result in results:
+                logging.info('Found "' + str(result) + '" user!')
+            results.sort()
+            return results
+
+        # Filters out the specified local users and values in array, then
+        # appends the rest of values in the array
+        for r in results:
+            if r in ['Name',
+                     'Administrator',
+                     'DefaultAccount',
+                     'Guest',
+                     'WDAGUtilityAccount',
+                     'LocalAccount',
+                     'TRUE',
+                     'FALSE']:
+                continue
+            self.list_usernames.insert(END, r)
+
+    def get(self, event):
+        w = event.widget
+        index = int(w.curselection()[0])
+        value = w.get(index)
+        w.destroy()
+        # return w.selection_set(0)
+        self.username = value
+        self.dia_list.destroy()
+        logging.info('Selected "' + value + '"!')
+        return value
 
     def get_users(self, master, output_var, host=None):
 
@@ -47,54 +103,16 @@ class UsernameSelect():
 
         self.list_usernames = Listbox(self.dia_list, selectmode=SINGLE)
 
-        logging.info('Showing user selection prompt!')
-
-        if host:
-            logging.info('Showing users from "' + host + '"...')
-            self.results = subprocess.run(
-                ['wmic', '/node:{}'.format(host),
-                 'UserAccount', 'get', 'Name'],
-                stdout=subprocess.PIPE).stdout.decode('utf-8').split()
-            results = self.results
-            for result in results:
-                logging.info('Found "' + str(result) + '" user on "' + str(host)
-                    + '" !')
-            results.sort()
-            return results
-
+        if len(self.results) > 0:
+            logging.info('Showing user selection prompt!')
+            for entry in self.entries:
+                self.list_usernames.insert(END, entry['cn'])
         else:
-            logging.info('Showing local users')
-            self.results = subprocess.run(
-                ['wmic', 'UserAccount', 'get', 'Name'],
-                stdout=subprocess.PIPE).stdout.decode('utf-8').split()
-            results = self.results
-            for result in results:
-                logging.info('Found "' + str(result) + '" user!')
-            results.sort()
-            return results
-
-        for r in results:
-            if r in ['Name',
-                     'Administrator',
-                     'DefaultAccount',
-                     'Guest',
-                     'WDAGUtilityAccount']:
-                continue
-            self.list_usernames.insert(END, r)
+            logging.info('There are no usernames to show!')
+            self.list_usernames.insert(END, 'Nothing to see here...')
 
         self.list_usernames.grid(row=0, column=0, pady=(10, 10), sticky='nswe')
         self.list_usernames.selection_set(first=0)
 
         self.list_usernames.bind(
             '<Double-Button-1>', lambda e: output_var.set(self.get(e)))
-
-    def get(self, event):
-        w = event.widget
-        index = int(w.curselection()[0])
-        value = w.get(index)
-        w.destroy()
-        # return w.selection_set(0)
-        self.username = value
-        self.dia_list.destroy()
-        logging.info('Selected "' + value + '"!')
-        return value
