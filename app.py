@@ -20,9 +20,6 @@
 # SOFTWARE.
 # -----------------------------------------------------------------------------
 
-import copyuserfiles as cuf
-from hostnameselect import HostnameSelect
-from usernameselect import UsernameSelect
 import os
 import tkinter as tk
 import tkinter.filedialog as tkFileDialog
@@ -32,6 +29,9 @@ import sys
 import ctypes
 import platform
 import time
+import copyuserfiles as cuf
+from hostnameselect import HostnameSelect
+from usernameselect import UsernameSelect
 
 # tkinter root vars
 root = tk.Tk()
@@ -55,6 +55,7 @@ bool_documents_loc = tk.BooleanVar()
 
 # ldap vars
 host = HostnameSelect(root)
+
 
 # Checks to see if user is administrator
 def is_admin():
@@ -155,7 +156,7 @@ def remote_actions_label_group(frame):
     # Remote documents folder location checkbox
     chk_documents_loc = tk.Checkbutton(grp_remote,
                                        text='Set remote documents folder' +
-                                            ' location',
+                                       ' location',
                                        variable=bool_documents_loc,
                                        command=lambda:
                                        grp_remote_actions.grid() if
@@ -167,18 +168,20 @@ def remote_actions_label_group(frame):
                            padx=(1, 15))
 
     # Remote hostname entry
-    """ rm_host_label = tk.Label(grp_remote_actions, text='Remote Hostname: ', )
+    """
+    rm_host_label = tk.Label(grp_remote_actions, text='Remote Hostname: ', )
     rm_host_entry = tk.Entry(grp_remote_actions, textvariable=str_hostname)
     rm_host_btn = tk.Button(grp_remote_actions,
                             text='Remote Hosts',
                             command=lambda: cmd_select_hostname(frame))
     rm_host_label.grid(row=0, column=0, sticky='e')
     rm_host_entry.grid(row=0, column=1, sticky='we')
-    rm_host_btn.grid(row=0, column=2, sticky='we') """
+    rm_host_btn.grid(row=0, column=2, sticky='we')
+    """
 
     # Remote documents folder target location entry
     rm_docs_label = tk.Label(grp_remote_actions, text='Documents ' +
-                                                      'Target Location: ', )
+                             'Target Location: ', )
     rm_docs_entry = tk.Entry(grp_remote_actions, textvariable=str_docs_loc)
     rm_docs_label.grid(row=1, column=0, sticky='e')
     rm_docs_entry.grid(row=1, column=1, sticky='we')
@@ -213,7 +216,7 @@ def action_label_group(frame):
     # Copy Downloads checkbox
     chk_copy_downloads = tk.Checkbutton(grp_actions,
                                         text='Copy Downloads Folder (Limited' +
-                                             ' to 50 most recent files)',
+                                        ' to 50 most recent files)',
                                         variable=bool_copy_downloads)
     chk_copy_downloads.grid(row=0, column=2, sticky='w',
                             padx=(15, 15))
@@ -269,12 +272,14 @@ def footer():
     # Pack all the widgets
     fra_footer.pack(side='bottom')
 
+
 def check_python():
     if sys.version_info[0] is 3:
         logging.info('Running correct version of python!')
     else:
         logging.warning('Running older version of python!')
         logging.warning('Some features might not work with older versions!')
+
 
 def init():
     logging.info('Started application at: ' + time.ctime())
@@ -291,16 +296,19 @@ def init():
     logging.info('python    : ' + platform.python_version())
     logging.info('version   : ' + cuf.__version__)
     logging.info('-==- [ APP INFO ] -==-')
-    logging.info('-===========- [ INIT ] -===========-')
+    check_python()
     if is_admin():
         logging.info('User is admin! Proceeding through the application...')
+        logging.info('-===========- [ INIT ] -===========-')
         main()
     else:
         logging.error('User is not admin! Prompting UAC elevation...')
         logging.error('This will restart the application!')
         logging.error('Stopped application at: ' + time.ctime())
+        logging.info('-===========- [ INIT ] -===========-')
         ctypes.windll.shell32.ShellExecuteW(
             None, 'runas', sys.executable, __file__, None, 1)
+
 
 def app():
     """ The main UI and application """
@@ -314,11 +322,14 @@ def app():
     footer()
     logging.info('Footer created!')
 
+
 def main():
+    """Main guts for the application and the process that keeps it alive"""
     logging.info('Starting GUI...')
     app()
     logging.info('GUI started!')
     root.mainloop()
+
 
 if __name__ == "__main__":
     init()

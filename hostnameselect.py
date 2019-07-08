@@ -22,10 +22,12 @@
 from tkinter import *
 from tkinter import messagebox
 from socket import getfqdn
+import subprocess
 import ldap3
 import logging
 import os
 import __main__
+
 
 class HostnameSelect():
     def __init__(self, master):
@@ -37,6 +39,7 @@ class HostnameSelect():
         self.hostname = str()
         self._ad_login(master)
 
+    # Login window for AD
     def _ad_login(self, master):
 
         dia_login = Toplevel(master)
@@ -70,6 +73,11 @@ class HostnameSelect():
         try:
             domain = getfqdn().split('.', 1)[1]
             entry_domain.insert(0, domain)
+            server = subprocess.run(['cmd', '/c', 'echo %logonserver%'],
+                                     stdout=subprocess.PIPE)
+            logonserver = server.stdout.decode('utf-8').replace('\\\\','')
+
+            entry_server.insert(0, logonserver)
         except:
             dia_login.destroy()
             logging.exception('Failed to get a domain name.')
@@ -91,7 +99,8 @@ class HostnameSelect():
         button_cancel = Button(lblfra_inputs,
                                text='Cancel',
                                command=lambda: [
-                                     dia_login.destroy()])
+                                     dia_login.destroy(),
+                                     logging.info('Not connected to AD!')])
 
         label_server.grid(row=0, column=0, sticky='e', padx=(10, 0))
         label_domain.grid(row=1, column=0, sticky='e', padx=(10, 0))
@@ -106,6 +115,7 @@ class HostnameSelect():
         button_login.grid(row=4, column=0)
         button_cancel.grid(row=4, column=1)
 
+    # Connects to domain with credentials
     def _ad_connect(self, server, domain, usr, pwd):
 
         logging.info('Connecting to domain...')
@@ -114,19 +124,28 @@ class HostnameSelect():
                                      user='{}\\{}'.format(domain, usr),
                                      password=pwd,
                                      authentication=ldap3.NTLM)
+        logging.info('-==- [ LOGIN INFO ] -==-')
+        logging.info('user      : ' + usr)
+        logging.info('domain    : ' + domain)
+        logging.info('server    : ' + server)
+        logging.info('-==- [ LOGIN INFO ] -==-')
 
+        # Connection not made to Domain, raise error
         if not self.conn.bind():
             logging.error('Could not connect to domain!')
             messagebox.showerror('Login Failed',
                                  'Failed to connect to Active Directory')
             raise ConnectionError('Failed to connect to Active Directory',
                                   self.conn.result)
+
+        # Connected to domain returns entries and disconnects
         else:
             logging.info('Connected to domain!')
             self.entries = self._ad_computerlist()
             self.conn.unbind()
             return self.entries
 
+    # Searches for computers on AD
     def _ad_computerlist(self):
         try:
             logging.info('Searching for computers on AD...')
@@ -139,6 +158,7 @@ class HostnameSelect():
             for entry in entries:
                 logging.info('Found "' + str(entry['cn']) + '" in AD!')
             return entries
+        # If something happens, log the exception
         except:
             return logging.exception('Failed to search for computers in AD!')
 
@@ -153,6 +173,7 @@ class HostnameSelect():
         logging.info('Selected "' + value + '"!')
         return value
 
+    # Hostname display window
     def get_name(self, master, output_var):
 
         self.dia_list = Toplevel(master)
