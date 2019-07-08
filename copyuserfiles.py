@@ -29,21 +29,22 @@ import argparse
 import logging
 import winreg
 from fnmatch import fnmatch
+import __main__
 
-__version__ = '1.3.0'
+__version__ = '2.0.0'
 
 # Registry Key for User Folders
 regKey_UserFolderLocations = ('Software\\Microsoft\\Windows\\CurrentVersion' +
                               '\\Explorer\\User Shell Folders')
 
 # Path for log file
-log_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+log_path = os.path.join(os.path.dirname(os.path.realpath(__main__.__file__)),
                         '{}.log'.format(__name__))
 # Logging config
 logging.basicConfig(level=logging.INFO,
                     filename=log_path,
                     filemode='a',
-                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    format='%(asctime)s - %(levelname)s - %(funcName)s - %(message)s',
                     datefmt='%d-%m-%y %H:%M:%S')
 logging.getLogger().addHandler(logging.StreamHandler())
 
@@ -434,10 +435,9 @@ def _copyall(src, dst):
     # Any error during the copying process
     except Exception as err:
         logging.exception('Exception occurred while trying to copy')
-        quit()
 
 
-def copyuserfiles(username, dest, hostname=None):
+def copyuserfiles(dest, src=None, username=None, hostname=None):
     """ Copies the files from the profile folder of the defined username to
     the destination folder. All files and subfolders will be placed in a
     folder with the same name as the username.
@@ -467,10 +467,21 @@ def copyuserfiles(username, dest, hostname=None):
 
     # Change path for either remote or local
     for folder in folders:
-        if hostname:
+        if hostname and not src:
             folders[folders.index(folder)] = (
                 '\\\\{}\\C$\\Users\\{}\\{}'.format(
                     hostname, username, folder))
+        elif src and not hostname:
+            if (os.path.exists(src)):
+                # If the src is actually a folder for a user
+                username = os.path.basename(src)
+                folders[folders.index(folder)] = (
+                    '{}\\{}'.format(
+                        src, folder))
+            else:
+                logging.error(
+                    'The source given was not for a valid folder of a user.')
+                sys.exit(1)
         else:
             folders[folders.index(folder)] = (
                 'C:\\Users\\{}\\{}'.format(username, folder))
@@ -501,9 +512,6 @@ def copyuserfiles(username, dest, hostname=None):
 
 if __name__ == '__main__':
     try:
-        logging.info('****************************************************')
-        logging.info('SCRIPT STARTED')
-        logging.info('****************************************************')
         logging.info('* This script does not copy anything ' +
                      'from the downloads folder. *')
         logging.info('Arguments: {}'.format(
@@ -514,12 +522,8 @@ if __name__ == '__main__':
         copyuserfiles(username=getUserName(),
                       dest=getUserDestDir(),
                       hostname=host)
-        logging.info('****************************************************')
-        logging.info('SCRIPT STOPPED')
-        logging.info('****************************************************')
     except (KeyboardInterrupt,
             SystemError,
             SystemExit) as err:
         logging.error("Stopped the script!", exc_info=True)
-        logging.info('****************************************************')
         quit()

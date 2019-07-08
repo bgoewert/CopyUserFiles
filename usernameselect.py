@@ -28,6 +28,7 @@ import logging
 class UsernameSelect():
     def __init__(self, master, output_var, remote_host=None):
 
+        logging.info('Initializing UsernameSelect...')
         self.username = str()
         self.remote_host = remote_host
         self.results = None
@@ -46,17 +47,33 @@ class UsernameSelect():
 
         self.list_usernames = Listbox(self.dia_list, selectmode=SINGLE)
 
+        logging.info('Showing user selection prompt!')
+
         if host:
+            logging.info('Showing users from "' + host + '"...')
             self.results = subprocess.run(
                 ['wmic', '/node:{}'.format(host),
                  'UserAccount', 'get', 'Name'],
                 stdout=subprocess.PIPE).stdout.decode('utf-8').split()
+            results = self.results
+            for result in results:
+                logging.info('Found "' + str(result) + '" user on "' + str(host)
+                    + '" !')
+            results.sort()
+            return results
+
         else:
+            logging.info('Showing local users')
             self.results = subprocess.run(
                 ['wmic', 'UserAccount', 'get', 'Name'],
                 stdout=subprocess.PIPE).stdout.decode('utf-8').split()
+            results = self.results
+            for result in results:
+                logging.info('Found "' + str(result) + '" user!')
+            results.sort()
+            return results
 
-        for r in self.results:
+        for r in results:
             if r in ['Name',
                      'Administrator',
                      'DefaultAccount',
@@ -79,4 +96,5 @@ class UsernameSelect():
         # return w.selection_set(0)
         self.username = value
         self.dia_list.destroy()
+        logging.info('Selected "' + value + '"!')
         return value

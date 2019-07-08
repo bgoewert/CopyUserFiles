@@ -20,8 +20,6 @@ These cannot currently be used if using the executable.
 
 ### Building the Executable
 
-***Requires Python3 to build***
-
 >Using this single executable ***does not*** require Python to be installed on a users computer
 
 This will create a `.spec` file that is ran automatically by PyInstaller and creates a single executable located in the `dist` folder.
@@ -31,7 +29,13 @@ dependencies to build the executable.
 
 ```shell
 > pip install -r requirements.txt
-> pyinstaller --onefile --nosonsole app.py
+> pyinstaller --onefile --noconsole --name copyuserfiles app.py
+```
+
+If you have more than one version of Python installed, make sure to use the desired version of pip and Python when building. Use the `-m PyInstaller` flag in order to build the executable, otherwise it will produce an error.
+```shell
+> pip3 install -r requirements.txt
+> py -m PyInstaller --onefile --noconsole --name copyuserfiles app.py
 ```
 
 [More info on `.spec` files](https://pyinstaller.readthedocs.io/en/stable/spec-files.html)
