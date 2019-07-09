@@ -30,8 +30,8 @@ class UsernameSelect():
 
         logging.info('Initializing UsernameSelect...')
         self.username = str()
-        self.remote_host = remote_host
         self.results = list()
+        self.remote_host = remote_host
 
         self.get_users(master, output_var, remote_host)
 
@@ -40,45 +40,56 @@ class UsernameSelect():
     # are not technically local users. However this will also try and find any
     # local users on the machine anyway.
     def _user_list(self):
-        if host:
-            logging.info('Showing users from "' + host + '"...')
+        totalusers = 0
+        if self.remote_host:
+            logging.info('Showing users from "' + self.remote_host + '"...')
             self.results = subprocess.run(
-                ['wmic', '/node:{}'.format(host),
-                 'UserAccount', 'get', 'Name,LocalAccount'],
+                ['wmic', '/node:"{}"'.format(self.remote_host),
+                 'UserAccount', 'get', 'Name'],
                 stdout=subprocess.PIPE).stdout.decode('utf-8').split()
             results = self.results
             for result in results:
+                totalusers = totalusers + 1
                 logging.info('Found "' + str(result) + '" user on "' +
-                             str(host) + '" !')
+                             str(self.remote_host) + '" !')
             results.sort()
-            return results
-
-        # If no connected to a domain, this will have all the local users
-        # pulled.
+            # Filters out the specified local users and values in array, then
+            # appends the rest of values in the array
+            for r in results:
+                if r in ['Name',
+                        'Administrator',
+                        'DefaultAccount',
+                        'Guest',
+                        'WDAGUtilityAccount',
+                        'LocalAccount',
+                        'TRUE',
+                        'FALSE']:
+                    continue
         else:
-            logging.info('Showing local users...')
+            logging.info('Showing users on local machine')
             self.results = subprocess.run(
-                ['wmic', 'UserAccount', 'get', 'Name,LocalAccount'],
+                ['wmic', 'UserAccount', 'get', 'Name'],
                 stdout=subprocess.PIPE).stdout.decode('utf-8').split()
             results = self.results
             for result in results:
+                totalusers = totalusers + 1
                 logging.info('Found "' + str(result) + '" user!')
             results.sort()
-            return results
+            # Filters out the specified local users and values in array, then
+            # appends the rest of values in the array
+            for r in results:
+                if r in ['Name',
+                        'Administrator',
+                        'DefaultAccount',
+                        'Guest',
+                        'WDAGUtilityAccount',
+                        'LocalAccount',
+                        'TRUE',
+                        'FALSE']:
+                    continue
+        return results
 
-        # Filters out the specified local users and values in array, then
-        # appends the rest of values in the array
-        for r in results:
-            if r in ['Name',
-                     'Administrator',
-                     'DefaultAccount',
-                     'Guest',
-                     'WDAGUtilityAccount',
-                     'LocalAccount',
-                     'TRUE',
-                     'FALSE']:
-                continue
-            self.list_usernames.insert(END, r)
+
 
     def get(self, event):
         w = event.widget
@@ -103,10 +114,12 @@ class UsernameSelect():
 
         self.list_usernames = Listbox(self.dia_list, selectmode=SINGLE)
 
+        self.results = self._user_list()
+
         if len(self.results) > 0:
             logging.info('Showing user selection prompt!')
-            for entry in self.entries:
-                self.list_usernames.insert(END, entry['cn'])
+            for result in self.results:
+                self.list_usernames.insert(END, result['cn'])
         else:
             logging.info('There are no usernames to show!')
             self.list_usernames.insert(END, 'Nothing to see here...')
