@@ -70,7 +70,7 @@ class HostnameSelect():
 
         logging.info('Showing AD login prompt!')
 
-        # From information from computer, automatically input Domain and Server
+        # From information from computer, automatically input credentials
         try:
             # Domain
             domain = getfqdn().split('.', 1)[1]
@@ -81,6 +81,10 @@ class HostnameSelect():
                                      stdout=subprocess.PIPE)
             logonserver = server.stdout.decode('utf-8').replace('\\\\','')
             entry_server.insert(0, logonserver)
+
+            # Username
+            username = os.getlogin()
+            entry_user.insert(0, username)
 
         # If cannot find one, leave it be
         except:

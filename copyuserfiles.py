@@ -28,6 +28,7 @@ import shutil
 import argparse
 import logging
 import winreg
+from pathlib import Path
 from fnmatch import fnmatch
 import __main__
 
@@ -405,33 +406,24 @@ def _findfile(pattern, path):
         for name in files:
             if fnmatch(name, pattern):
                 result.append(os.path.join(root, name))
-
+    logging.info('Found %s' % result)
     return result
+
+
+def _logpath(src, names):
+    logging.info('Copying %s files %s' % (src,names))
+    return []
 
 
 def _copyall(src, dst):
     """ Copies all sub folders and files from the source. """
 
     try:
-        for root, dirs, files in os.walk(src):
-            # Creates the root directory
-            if not os.path.isdir(root):
-                os.makedirs(root)
-                logging.info('Root directory created: %s' % root)
-
-            # Creates directories and files to be copied into
-            for f in files:
-                # Creates directories if destination does not have a directory
-                if not os.path.isdir(dst):
-                    os.makedirs(dst)
-                    logging.info('Destination directory created: %s' % dst)
-
-                # Copies the files
-                nf_path = os.path.join(dst, f)  # new file path
-                f_path = os.path.join(root, f)  # file to copy from
-                shutil.copy(f_path, nf_path)
-                logging.info('New file copied: %s' % str(nf_path))
-
+        shutil.copytree(src,dst, ignore=_logpath)
+        if Path.exists(dst) == True:
+            Path.replace(target=dst)
+        elif Path.exists(dst) == False:
+            pass
     # Any error during the copying process
     except Exception as err:
         logging.exception('Exception occurred while trying to copy')
@@ -507,7 +499,7 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
                 _copyall(f, os.path.join(newDst, f))
 
         else:
-            _copyall(path, newDst)
+            _copyall(Path(path), Path(newDst))
 
 
 if __name__ == '__main__':
