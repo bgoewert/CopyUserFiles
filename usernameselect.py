@@ -34,6 +34,7 @@ class UsernameSelect():
         self.remote_host = remote_host
 
         self.get_users(master, output_var, remote_host)
+        search_users()
 
     # If connected to a domain, this will pull all users from the domain.
     # This is a non-issue because how domains are set up and how domain users
@@ -52,6 +53,17 @@ class UsernameSelect():
                 totalusers = totalusers + 1
                 logging.info('Found "' + str(result) + '" user on "' +
                              str(self.remote_host) + '" !')
+    def search_users():
+        if host:
+            logging.info('Showing users from "' + host + '"...')
+            self.results = subprocess.run(
+                ['wmic', '/node:{}'.format(host),
+                    'UserAccount', 'get', 'Name'],
+                stdout=subprocess.PIPE).stdout.decode('utf-8').split()
+            results = self.results
+            for result in results:
+                logging.info('Found "' + str(result) + '" user on "' +
+                             str(host) + '" !')
             results.sort()
             # Filters out the specified local users and values in array, then
             # appends the rest of values in the array
@@ -74,6 +86,7 @@ class UsernameSelect():
             for result in results:
                 totalusers = totalusers + 1
                 logging.info('Found "' + str(result) + '" user!')
+                logging.info('Found "' + str(result['cn']) + '" user!')
             results.sort()
             # Filters out the specified local users and values in array, then
             # appends the rest of values in the array
@@ -89,6 +102,21 @@ class UsernameSelect():
                     continue
         return results
 
+    def get_users(self, master, output_var, host=None):
+        self.dia_list = Toplevel(master)
+        self.dia_list.title('Select a username from the computer')
+        self.dia_list.geometry('200x600')
+        self.dia_list.resizable(True, True)
+        self.dia_list.grid_columnconfigure(0, weight=1)
+        self.dia_list.grid_rowconfigure(0, weight=1)
+        self.dia_list.focus()
+
+        self.list_usernames = Listbox(self.dia_list, selectmode=SINGLE)
+
+        logging.info('Showing user selection prompt!')
+
+        self.list_usernames.grid(row=0, column=0, pady=(10, 10), sticky='nswe')
+        self.list_usernames.selection_set(first=0)
 
 
     def get(self, event):

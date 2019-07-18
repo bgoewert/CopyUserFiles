@@ -80,6 +80,9 @@ class HostnameSelect():
             server = subprocess.run(['cmd', '/c', 'echo %logonserver%'],
                                      stdout=subprocess.PIPE)
             logonserver = server.stdout.decode('utf-8').replace('\\\\','')
+                                    stdout=subprocess.PIPE)
+            logonserver = server.stdout.decode('utf-8').replace('\\\\', '')
+
             entry_server.insert(0, logonserver)
 
             # Username
