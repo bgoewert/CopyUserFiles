@@ -504,8 +504,8 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
                         '{}\\{}'.format(
                             src, folder))
                 else:
-                    logging.error(
-                        'The source given was not for a valid folder of a user.')
+                    logging.error('The source given was not for ' +
+                                  'a valid folder of a user.')
                     sys.exit(1)
             else:
                 folders[folders.index(folder)] = (
@@ -517,7 +517,7 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
             dest = os.path.abspath(dest)
 
             newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
-                                dest + os.sep + '%s' % username)
+                                  dest + os.sep + '%s' % username)
 
             # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
             if 'Outlook' in path and 'Local' in path:
@@ -526,8 +526,8 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
 
             # Copy Outlook folders in %APPDATA%/Roaming/Microsoft/Outlook
             elif ('Outlook' in path and
-                'RoamCache' not in path and
-                'Roaming' in path):
+                  'RoamCache' not in path and
+                  'Roaming' in path):
                 for f in _findfile('*.nk2', path):
                     _copyall(f, os.path.join(newDst, f))
 
