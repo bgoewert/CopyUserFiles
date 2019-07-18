@@ -18,6 +18,7 @@ These cannot currently be used if using the executable.
 |-u, --username     | Sets the username for the source directory to copy files out of (e.g. the user "TestUser" -> "C:\\Users\\TestUser")   |
 |-H, --hostname     | Set the remote hostname for target destination                                                                        |
 
+
 ### Building the Executable
 
 >Using this single executable ***does not*** require Python to be installed on a users computer
@@ -27,6 +28,14 @@ This will create a `.spec` file that is ran automatically by PyInstaller and cre
 The `requirements.txt` file is required to install first because this will grab all
 dependencies to build the executable.
 
+#### CLI Script
+```shell
+> pip install -r requirements.txt
+> pyinstaller --onefile opyuserfiles.py
+```
+
+
+#### GUI
 ```shell
 > pip install -r requirements.txt
 > pyinstaller --onefile --noconsole --name copyuserfiles app.py
