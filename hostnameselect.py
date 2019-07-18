@@ -70,14 +70,24 @@ class HostnameSelect():
 
         logging.info('Showing AD login prompt!')
 
+        # From information from computer, automatically input credentials
         try:
+            # Domain
             domain = getfqdn().split('.', 1)[1]
             entry_domain.insert(0, domain)
+
+            # Logon Server
             server = subprocess.run(['cmd', '/c', 'echo %logonserver%'],
-                                     stdout=subprocess.PIPE)
-            logonserver = server.stdout.decode('utf-8').replace('\\\\','')
+                                    stdout=subprocess.PIPE)
+            logonserver = server.stdout.decode('utf-8').replace('\\\\', '')
 
             entry_server.insert(0, logonserver)
+
+            # Username
+            username = os.getlogin()
+            entry_user.insert(0, username)
+
+        # If cannot find one, leave it be
         except:
             dia_login.destroy()
             logging.exception('Failed to get a domain name.')
@@ -155,8 +165,11 @@ class HostnameSelect():
                              attributes=['cn', 'dNSHostName'])
             entries = self.conn.entries
             entries.sort()
+            entryTotal = 0
             for entry in entries:
+                entryTotal = entryTotal + 1
                 logging.info('Found "' + str(entry['cn']) + '" in AD!')
+            logging.info('Total hostnames: ' + str(entryTotal))
             return entries
         # If something happens, log the exception
         except:

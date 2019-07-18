@@ -345,7 +345,8 @@ def getDocsLoc(tries=0):
         if args[0].documents is not None:
             docLoc = os.path.abspath(args[0].documents)
             if os.path.isfile(docLoc):
-                logging.warning('That was not a folder...')
+                logging.warning('That was not a folder... \n Folder:' +
+                                docLoc)
                 argparse.ArgumentParser.exit()
 
         # Documents Directory is not declared as an argument
@@ -359,6 +360,7 @@ def getDocsLoc(tries=0):
                 logging.info('Trying again...')
                 getDocsLoc(tries + 1)
 
+    logging.info('Target Location: %s' % docLoc)
     return docLoc
 
 
