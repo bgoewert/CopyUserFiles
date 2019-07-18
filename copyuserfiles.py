@@ -44,7 +44,8 @@ log_path = os.path.join(os.path.dirname(os.path.realpath(__main__.__file__)),
 logging.basicConfig(level=logging.INFO,
                     filename=log_path,
                     filemode='a',
-                    format='%(asctime)s - %(levelname)s - %(funcName)s - %(message)s',
+                    format=('%(asctime)s - %(levelname)s - ' +
+                            '%(funcName)s - %(message)s'),
                     datefmt='%d-%m-%y %H:%M:%S')
 logging.getLogger().addHandler(logging.StreamHandler())
 
@@ -202,9 +203,7 @@ def getUserName(tries=0):
             # If username is set as an argument
             if args[0].username is not None:
                 username = args[0].username
-                homepath = (os.path.dirname(os.environ['HOME']) +
-                            os.sep +
-                            username)
+                homepath = os.path.expanduser('~')
                 if not os.path.exists(homepath):
                     print('That was not a folder...')
                     print(homepath)
@@ -215,9 +214,7 @@ def getUserName(tries=0):
             # If it is not set as an argument, ask for user input
             else:
                 username = input('Name of user folder: ')
-                homepath = (os.path.dirname(os.environ['HOME']) +
-                            os.sep +
-                            username)
+                homepath = os.path.expanduser('~')
                 if not os.path.exists(homepath):
                     print('That was not a folder...')
                     print(homepath)
@@ -405,32 +402,49 @@ def _findfile(pattern, path):
         for name in files:
             if fnmatch(name, pattern):
                 result.append(os.path.join(root, name))
-
+    logging.info('Found %s' % result)
     return result
+
+
+def _logpath(src, names):
+    """ To be used with the `ignore` argument in shutil.copytree() """
+
+    logging.info('Copying %s files %s' % (src, names))
+    return []
+
+
+def copy3(src, dst, overwrite=False, follow_symlinks=True):
+    """
+    Copy data and metadata. Return the file's destination.
+
+    The destination may be a directory.
+
+    If the optional `overwrite` argument is set to true and the destination
+    already exists, then it is overwritten.
+
+    If follow_symlinks is false, symlinks won't be followed. This resembles
+    GNU's "cp -P src dst".
+    """
+
+    # if dst does exist, decide whether to replace it or not
+    if os.path.exists(dst):
+        if overwrite:
+            pass
+        else:
+            logging.info('Destination already exists: {}'.format(dst))
+            return
+
+    # if dst does not exist, copy it.
+    copied = shutil.copy2(src, dst, follow_symlinks=follow_symlinks)
+    logging.info('Copying %s ' % (copied))
+    return dst
 
 
 def _copyall(src, dst):
     """ Copies all sub folders and files from the source. """
 
     try:
-        for root, dirs, files in os.walk(src):
-            # Creates the root directory
-            if not os.path.isdir(root):
-                os.makedirs(root)
-                logging.info('Root directory created: %s' % root)
-
-            # Creates directories and files to be copied into
-            for f in files:
-                # Creates directories if destination does not have a directory
-                if not os.path.isdir(dst):
-                    os.makedirs(dst)
-                    logging.info('Destination directory created: %s' % dst)
-
-                # Copies the files
-                nf_path = os.path.join(dst, f)  # new file path
-                f_path = os.path.join(root, f)  # file to copy from
-                shutil.copy(f_path, nf_path)
-                logging.info('New file copied: %s' % str(nf_path))
+        shutil.copytree(src, dst, copy_function=copy3)
 
     # Any error during the copying process
     except Exception as err:
