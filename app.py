@@ -307,8 +307,8 @@ def init():
         logging.error('This will restart the application!')
         logging.error('Stopped application at: ' + time.ctime())
         logging.info('-===========- [ INIT ] -===========-')
-        ctypes.windll.shell32.ShellExecuteW(
-            None, 'runas', sys.executable, __file__, None, 1)
+        ctypes.windll.shell32.ShellExecuteW(None, 'runas', sys.executable,
+                                            __file__, None, 1)
 
 
 def app():

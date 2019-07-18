@@ -57,8 +57,8 @@ class UsernameSelect():
                 stdout=subprocess.PIPE).stdout.decode('utf-8').split()
             results = self.results
             for result in results:
-                logging.info('Found "' + str(result) + '" user on "' + str(host)
-                    + '" !')
+                logging.info('Found "' + str(result) + '" user on "' +
+                             str(host) + '" !')
             results.sort()
             return results
 

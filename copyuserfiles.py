@@ -28,6 +28,7 @@ import shutil
 import argparse
 import logging
 import winreg
+import ctypes
 from fnmatch import fnmatch
 import __main__
 
@@ -78,6 +79,18 @@ argp.add_argument('-H', '--hostname', type=str,
                        'Do not set this to use local machine.',
                   action='store',
                   required=False)
+
+
+# Checks to see if user is administrator
+def is_admin():
+    logging.info('Checking user privledges...')
+    try:
+        # Requests administrator permission for the python script
+        logging.info('Checking if user is admin...')
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        logging.info('User is not admin!')
+        return False
 
 
 def getUserRegKey(key, valName, target=None):
@@ -416,15 +429,25 @@ def _copyall(src, dst):
             s = os.path.join(src, item)
             d = os.path.join(dst, item)
             if os.path.isdir(s):
+                logging.info('%s is a directory' % s)
                 if os.path.isdir(d):
+                    logging.info('%s exists in destination! Deleting!' % d)
                     shutil.rmtree(d)
+                    logging.info('Deleted %s' % d)
+                    logging.info('Copying %s' % d)
                     shutil.copytree(s, d)
+                    logging.info('Copied %s' % d)
                 else:
+                    logging.info('Copying %s to %s' % (s, d))
                     shutil.copytree(s, d)
+                    logging.info('Copied %s' % d)
             else:
+                logging.info('%s is not a directory' % s)
                 if not os.path.isdir(os.path.dirname(d)):
+                    logging.info('Copying %s tp %s' % (s, d))
                     shutil.copytree(os.path.dirname(s), os.path.dirname(d))
                 else:
+                    logging.info('Copying %s tp %s' % (s, d))
                     shutil.copy(s, d)
 
     # Any error during the copying process
@@ -521,16 +544,22 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
 
 if __name__ == '__main__':
     try:
-        logging.info('* This script does not copy anything ' +
-                     'from the downloads folder. *')
-        logging.info('Arguments: {}'.format(
-            argp.parse_known_args(sys.argv[1:])))
-        host = getHostname()
-        setDocsLoc(hostname=host,
-                   documents_location=getDocsLoc())
-        copyuserfiles(username=getUserName(),
-                      dest=getUserDestDir(),
-                      hostname=host)
+        if is_admin():
+            logging.info('User is admin!')
+            logging.info('* This script does not copy anything ' +
+                        'from the downloads folder. *')
+            logging.info('Arguments: {}'.format(
+                argp.parse_known_args(sys.argv[1:])))
+            host = getHostname()
+            setDocsLoc(hostname=host,
+                    documents_location=getDocsLoc())
+            copyuserfiles(username=getUserName(),
+                        dest=getUserDestDir(),
+                        hostname=host)
+        else:
+            logging.error('User is not admin! Prompting UAC elevation...')
+            ctypes.windll.shell32.ShellExecuteW(None, 'runas', sys.executable,
+                                                __file__, None, 1)
     except (KeyboardInterrupt,
             SystemError,
             SystemExit) as err:
