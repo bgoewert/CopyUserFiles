@@ -33,6 +33,8 @@ import __main__
 
 __version__ = '2.0.0'
 
+_stop_flag = False
+
 # Registry Key for User Folders
 regKey_UserFolderLocations = ('Software\\Microsoft\\Windows\\CurrentVersion' +
                               '\\Explorer\\User Shell Folders')
@@ -451,6 +453,12 @@ def _copyall(src, dst):
         logging.exception('Exception occurred while trying to copy')
 
 
+def stop():
+    global _stop_flag
+
+    _stop_flag = True
+
+
 def copyuserfiles(dest, src=None, username=None, hostname=None):
     """ Copies the files from the profile folder of the defined username to
     the destination folder. All files and subfolders will be placed in a
@@ -462,6 +470,8 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
         The destination directory to copy the user files to.
 
     """
+
+    global _stop_flag
 
     # Folders to copy over
     folders = [
@@ -480,48 +490,49 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
     ]
 
     # Change path for either remote or local
-    for folder in folders:
-        if hostname and not src:
-            folders[folders.index(folder)] = (
-                '\\\\{}\\C$\\Users\\{}\\{}'.format(
-                    hostname, username, folder))
-        elif src and not hostname:
-            if (os.path.exists(src)):
-                # If the src is actually a folder for a user
-                username = os.path.basename(src)
+    while _stop_flag is False:
+        for folder in folders:
+            if hostname and not src:
                 folders[folders.index(folder)] = (
-                    '{}\\{}'.format(
-                        src, folder))
+                    '\\\\{}\\C$\\Users\\{}\\{}'.format(
+                        hostname, username, folder))
+            elif src and not hostname:
+                if (os.path.exists(src)):
+                    # If the src is actually a folder for a user
+                    username = os.path.basename(src)
+                    folders[folders.index(folder)] = (
+                        '{}\\{}'.format(
+                            src, folder))
+                else:
+                    logging.error(
+                        'The source given was not for a valid folder of a user.')
+                    sys.exit(1)
             else:
-                logging.error(
-                    'The source given was not for a valid folder of a user.')
-                sys.exit(1)
-        else:
-            folders[folders.index(folder)] = (
-                'C:\\Users\\{}\\{}'.format(username, folder))
+                folders[folders.index(folder)] = (
+                    'C:\\Users\\{}\\{}'.format(username, folder))
 
-    # Copy all paths in the folders array
-    for folder in folders:
-        path = os.path.abspath(folder)
-        dest = os.path.abspath(dest)
+        # Copy all paths in the folders array
+        for folder in folders:
+            path = os.path.abspath(folder)
+            dest = os.path.abspath(dest)
 
-        newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
-                              dest + os.sep + '%s' % username)
+            newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
+                                dest + os.sep + '%s' % username)
 
-        # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
-        if 'Outlook' in path and 'Local' in path:
-            for f in _findfile('*.pst', path):
-                _copyall(f, os.path.join(newDst, f))
+            # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
+            if 'Outlook' in path and 'Local' in path:
+                for f in _findfile('*.pst', path):
+                    _copyall(f, os.path.join(newDst, f))
 
-        # Copy Outlook folders in %APPDATA%/Roaming/Microsoft/Outlook
-        elif ('Outlook' in path and
-              'RoamCache' not in path and
-              'Roaming' in path):
-            for f in _findfile('*.nk2', path):
-                _copyall(f, os.path.join(newDst, f))
+            # Copy Outlook folders in %APPDATA%/Roaming/Microsoft/Outlook
+            elif ('Outlook' in path and
+                'RoamCache' not in path and
+                'Roaming' in path):
+                for f in _findfile('*.nk2', path):
+                    _copyall(f, os.path.join(newDst, f))
 
-        else:
-            _copyall(path, newDst)
+            else:
+                _copyall(path, newDst)
 
 
 if __name__ == '__main__':
