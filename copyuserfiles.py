@@ -43,7 +43,7 @@ log_path = os.path.join(os.path.dirname(os.path.realpath(__main__.__file__)),
 # Logging config
 logging.basicConfig(level=logging.INFO,
                     filename=log_path,
-                    filemode='a',
+                    filemode='w',
                     format=('%(asctime)s - %(levelname)s - ' +
                             '%(funcName)s - %(message)s'),
                     datefmt='%d-%m-%y %H:%M:%S')
