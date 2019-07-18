@@ -408,45 +408,24 @@ def _findfile(pattern, path):
     return result
 
 
-def _logpath(src, names):
-    """ To be used with the `ignore` argument in shutil.copytree() """
-
-    logging.info('Copying %s files %s' % (src, names))
-    return []
-
-
-def copy3(src, dst, overwrite=False, follow_symlinks=True):
-    """
-    Copy data and metadata. Return the file's destination.
-
-    The destination may be a directory.
-
-    If the optional `overwrite` argument is set to true and the destination
-    already exists, then it is overwritten.
-
-    If follow_symlinks is false, symlinks won't be followed. This resembles
-    GNU's "cp -P src dst".
-    """
-
-    # if dst does exist, decide whether to replace it or not
-    if os.path.exists(dst):
-        if overwrite:
-            pass
-        else:
-            logging.info('Destination already exists: {}'.format(dst))
-            return
-
-    # if dst does not exist, copy it.
-    copied = shutil.copy2(src, dst, follow_symlinks=follow_symlinks)
-    logging.info('Copying %s ' % (copied))
-    return dst
-
-
 def _copyall(src, dst):
     """ Copies all sub folders and files from the source. """
 
     try:
-        shutil.copytree(src, dst, copy_function=copy3)
+        for item in os.listdir(src):
+            s = os.path.join(src, item)
+            d = os.path.join(dst, item)
+            if os.path.isdir(s):
+                if os.path.isdir(d):
+                    shutil.rmtree(d)
+                    shutil.copytree(s, d)
+                else:
+                    shutil.copytree(s, d)
+            else:
+                if not os.path.isdir(os.path.dirname(d)):
+                    shutil.copytree(os.path.dirname(s), os.path.dirname(d))
+                else:
+                    shutil.copy(s, d)
 
     # Any error during the copying process
     except Exception as err:
@@ -472,6 +451,8 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
     """
 
     global _stop_flag
+
+    f_cnt = 0
 
     # Folders to copy over
     folders = [
@@ -513,6 +494,7 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
 
         # Copy all paths in the folders array
         for folder in folders:
+            f_cnt = f_cnt + 1
             path = os.path.abspath(folder)
             dest = os.path.abspath(dest)
 
@@ -534,6 +516,8 @@ def copyuserfiles(dest, src=None, username=None, hostname=None):
             else:
                 _copyall(path, newDst)
 
+        if len(folders) == f_cnt:
+            break
 
 if __name__ == '__main__':
     try:
