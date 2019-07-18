@@ -27,6 +27,13 @@ This will create a `.spec` file that is ran automatically by PyInstaller and cre
 The `requirements.txt` file is required to install first because this will grab all
 dependencies to build the executable.
 
+#### CLI Script
+```shell
+> pip install -r requirements.txt
+> pyinstaller --onefile opyuserfiles.py
+```
+
+#### GUI
 ```shell
 > pip install -r requirements.txt
 > pyinstaller --onefile --noconsole --name copyuserfiles app.py

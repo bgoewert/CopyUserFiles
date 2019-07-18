@@ -210,7 +210,8 @@ def action_label_group(frame):
     btn_stop = tk.Button(grp_actions,
                          text='Stop',
                          bg='#aa2020',
-                         width=5)
+                         width=5,
+                         command=cuf.stop)
     btn_stop.grid(row=0, column=1, sticky='we')
 
     # Copy Downloads checkbox
