@@ -78,14 +78,12 @@ class UsernameSelect():
                         'FALSE']:
                     continue
         else:
-            logging.info('Showing users on local machine')
+            logging.info('Showing local users...')
             self.results = subprocess.run(
                 ['wmic', 'UserAccount', 'get', 'Name'],
                 stdout=subprocess.PIPE).stdout.decode('utf-8').split()
             results = self.results
             for result in results:
-                totalusers = totalusers + 1
-                logging.info('Found "' + str(result) + '" user!')
                 logging.info('Found "' + str(result['cn']) + '" user!')
             results.sort()
             # Filters out the specified local users and values in array, then
