@@ -32,7 +32,7 @@ import ctypes
 from fnmatch import fnmatch
 import __main__
 
-__version__ = '2.0.0'
+__version__ = '2.1.1'
 
 _stop_flag = False
 
@@ -55,6 +55,12 @@ logging.getLogger().addHandler(logging.StreamHandler())
 # Command-line arguments
 argp = argparse.ArgumentParser(description='Copies all the important ' +
                                'files and folders from the user profile.')
+# Source
+argp.add_argument('-s', '--source', type=str,
+                  help=('Set the source directory. ' +
+                        'More specifically the user profile location'),
+                  action='store',
+                  required=False)
 # Destination
 argp.add_argument('-d', '--destination', type=str,
                   help='Set the destination directory.',
@@ -263,8 +269,11 @@ def getUserSrcDir(tries=0):
 
     try:
         if tries < 5:
-            if args[0].destination is not None:
-                userDir = os.path.abspath(args[0].destination)
+            if args[0].source is not None:
+                if args[0].source is '':
+                    userDir = args[0].source
+                else:
+                    userDir = os.path.abspath(args[0].source)
                 if os.path.isfile(userDir):
                     print('That was not a folder...')
                     argparse.ArgumentParser.exit()
@@ -303,7 +312,10 @@ def getUserDestDir(tries=0):
         if tries < 5:
             # Source Directory is declared as an argument
             if args[0].destination is not None:
-                destDir = os.path.abspath(args[0].destination)
+                if args[0].destination is '':
+                    destDir = args[0].destination
+                else:
+                    destDir = os.path.abspath(args[0].destination)
                 if os.path.isfile(destDir):
                     logging.warning('That was not a folder...')
                     argparse.ArgumentParser.exit()
@@ -343,7 +355,10 @@ def getDocsLoc(tries=0):
     if tries < 5:
         # Documents Directory is declared as an argument
         if args[0].documents is not None:
-            docLoc = os.path.abspath(args[0].documents)
+            if args[0].documents is '':
+                docLoc = args[0].documents
+            else:
+                docLoc = os.path.abspath(args[0].documents)
             if os.path.isfile(docLoc):
                 logging.warning('That was not a folder... \n Folder:' +
                                 docLoc)

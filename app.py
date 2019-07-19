@@ -29,6 +29,7 @@ import sys
 import ctypes
 import platform
 import time
+import subprocess
 import copyuserfiles as cuf
 from hostnameselect import HostnameSelect
 from usernameselect import UsernameSelect
@@ -70,9 +71,7 @@ def is_admin():
 
 
 def cmd_select_dir(str_var):
-    """ Opens a file dialog to select a source directory.
-    - str_src_dir = tkinter.StringVar() variable
-    """
+    """ Opens a file dialog to select a source directory."""
     str_var.set(tkFileDialog.askdirectory())
 
 
@@ -89,6 +88,21 @@ def cmd_select_hostname(frame):
 
 def cmd_select_username(frame):
     UsernameSelect(frame, str_username, str_hostname.get())
+
+
+def cmd_start():
+    """ try:
+        start = subprocess.call(['py', 'copyuserfiles.py',
+                                 '-u', os.path.basename(str_src_dir.get()),
+                                 '-d', str_dest_dir.get(),
+                                 '-H', str_hostname.get(),
+                                 '-D', str_docs_loc.get()])
+    except:
+        logging.exception('Unable to run subprocess') """
+    cuf.copyuserfiles(str_dest_dir.get(),
+                      str_src_dir.get(),
+                      str_username.get(),
+                      str_hostname.get())
 
 
 def dir_select_label_group(frame):
@@ -200,10 +214,7 @@ def action_label_group(frame):
                           bg='#209920',
                           width=5)
     btn_start.bind('<Button-1>',
-                   lambda e: cuf.copyuserfiles(str_dest_dir.get(),
-                                               str_src_dir.get(),
-                                               str_username.get(),
-                                               str_hostname.get()))
+                   lambda e: cmd_start())
     btn_start.grid(row=0, column=0, sticky='we')
 
     # Stop button
