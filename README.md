@@ -52,7 +52,7 @@ The CLI commands below will create a single executable located in a `dist` folde
 
 ```shell
 > pip install -r requirements.txt
-> pyinstaller --onefile --noconsole --name copyuserfiles app.py
+> py pyinstaller --onefile --noconsole --name copyuserfiles app.py
 ```
 
 #### Using with mulitiple Python versions
