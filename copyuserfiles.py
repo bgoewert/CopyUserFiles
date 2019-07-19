@@ -28,10 +28,13 @@ import shutil
 import argparse
 import logging
 import winreg
+import ctypes
 from fnmatch import fnmatch
 import __main__
 
-__version__ = '2.0.0'
+__version__ = '2.1.1'
+
+_stop_flag = False
 
 # Registry Key for User Folders
 regKey_UserFolderLocations = ('Software\\Microsoft\\Windows\\CurrentVersion' +
@@ -43,14 +46,21 @@ log_path = os.path.join(os.path.dirname(os.path.realpath(__main__.__file__)),
 # Logging config
 logging.basicConfig(level=logging.INFO,
                     filename=log_path,
-                    filemode='a',
-                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    filemode='w',
+                    format=('%(asctime)s - %(levelname)s - ' +
+                            '%(funcName)s - %(message)s'),
                     datefmt='%d-%m-%y %H:%M:%S')
 logging.getLogger().addHandler(logging.StreamHandler())
 
 # Command-line arguments
 argp = argparse.ArgumentParser(description='Copies all the important ' +
                                'files and folders from the user profile.')
+# Source
+argp.add_argument('-s', '--source', type=str,
+                  help=('Set the source directory. ' +
+                        'More specifically the user profile location'),
+                  action='store',
+                  required=False)
 # Destination
 argp.add_argument('-d', '--destination', type=str,
                   help='Set the destination directory.',
@@ -75,6 +85,18 @@ argp.add_argument('-H', '--hostname', type=str,
                        'Do not set this to use local machine.',
                   action='store',
                   required=False)
+
+
+# Checks to see if user is administrator
+def is_admin():
+    logging.info('Checking user privledges...')
+    try:
+        # Requests administrator permission for the python script
+        logging.info('Checking if user is admin...')
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        logging.info('User is not admin!')
+        return False
 
 
 def getUserRegKey(key, valName, target=None):
@@ -202,9 +224,7 @@ def getUserName(tries=0):
             # If username is set as an argument
             if args[0].username is not None:
                 username = args[0].username
-                homepath = (os.path.dirname(os.environ['HOME']) +
-                            os.sep +
-                            username)
+                homepath = os.path.expanduser('~')
                 if not os.path.exists(homepath):
                     print('That was not a folder...')
                     print(homepath)
@@ -215,9 +235,7 @@ def getUserName(tries=0):
             # If it is not set as an argument, ask for user input
             else:
                 username = input('Name of user folder: ')
-                homepath = (os.path.dirname(os.environ['HOME']) +
-                            os.sep +
-                            username)
+                homepath = os.path.expanduser('~')
                 if not os.path.exists(homepath):
                     print('That was not a folder...')
                     print(homepath)
@@ -251,8 +269,11 @@ def getUserSrcDir(tries=0):
 
     try:
         if tries < 5:
-            if args[0].destination is not None:
-                userDir = os.path.abspath(args[0].destination)
+            if args[0].source is not None:
+                if args[0].source is '':
+                    userDir = args[0].source
+                else:
+                    userDir = os.path.abspath(args[0].source)
                 if os.path.isfile(userDir):
                     print('That was not a folder...')
                     argparse.ArgumentParser.exit()
@@ -291,7 +312,10 @@ def getUserDestDir(tries=0):
         if tries < 5:
             # Source Directory is declared as an argument
             if args[0].destination is not None:
-                destDir = os.path.abspath(args[0].destination)
+                if args[0].destination is '':
+                    destDir = args[0].destination
+                else:
+                    destDir = os.path.abspath(args[0].destination)
                 if os.path.isfile(destDir):
                     logging.warning('That was not a folder...')
                     argparse.ArgumentParser.exit()
@@ -331,9 +355,13 @@ def getDocsLoc(tries=0):
     if tries < 5:
         # Documents Directory is declared as an argument
         if args[0].documents is not None:
-            docLoc = os.path.abspath(args[0].documents)
+            if args[0].documents is '':
+                docLoc = args[0].documents
+            else:
+                docLoc = os.path.abspath(args[0].documents)
             if os.path.isfile(docLoc):
-                logging.warning('That was not a folder...')
+                logging.warning('That was not a folder... \n Folder:' +
+                                docLoc)
                 argparse.ArgumentParser.exit()
 
         # Documents Directory is not declared as an argument
@@ -347,6 +375,7 @@ def getDocsLoc(tries=0):
                 logging.info('Trying again...')
                 getDocsLoc(tries + 1)
 
+    logging.info('Target Location: %s' % docLoc)
     return docLoc
 
 
@@ -405,7 +434,7 @@ def _findfile(pattern, path):
         for name in files:
             if fnmatch(name, pattern):
                 result.append(os.path.join(root, name))
-
+    logging.info('Found %s' % result)
     return result
 
 
@@ -413,32 +442,43 @@ def _copyall(src, dst):
     """ Copies all sub folders and files from the source. """
 
     try:
-        for root, dirs, files in os.walk(src):
-            # Creates the root directory
-            if not os.path.isdir(root):
-                os.makedirs(root)
-                logging.info('Root directory created: %s' % root)
-
-            # Creates directories and files to be copied into
-            for f in files:
-                # Creates directories if destination does not have a directory
-                if not os.path.isdir(dst):
-                    os.makedirs(dst)
-                    logging.info('Destination directory created: %s' % dst)
-
-                # Copies the files
-                nf_path = os.path.join(dst, f)  # new file path
-                f_path = os.path.join(root, f)  # file to copy from
-                shutil.copy(f_path, nf_path)
-                logging.info('New file copied: %s' % str(nf_path))
+        for item in os.listdir(src):
+            s = os.path.join(src, item)
+            d = os.path.join(dst, item)
+            if os.path.isdir(s):
+                logging.info('%s is a directory' % s)
+                if os.path.isdir(d):
+                    logging.info('%s exists in destination! Deleting!' % d)
+                    shutil.rmtree(d)
+                    logging.info('Deleted %s' % d)
+                    logging.info('Copying %s' % d)
+                    shutil.copytree(s, d)
+                    logging.info('Copied %s' % d)
+                else:
+                    logging.info('Copying %s to %s' % (s, d))
+                    shutil.copytree(s, d)
+                    logging.info('Copied %s' % d)
+            else:
+                logging.info('%s is not a directory' % s)
+                if not os.path.isdir(os.path.dirname(d)):
+                    logging.info('Copying %s tp %s' % (s, d))
+                    shutil.copytree(os.path.dirname(s), os.path.dirname(d))
+                else:
+                    logging.info('Copying %s tp %s' % (s, d))
+                    shutil.copy(s, d)
 
     # Any error during the copying process
     except Exception as err:
         logging.exception('Exception occurred while trying to copy')
-        quit()
 
 
-def copyuserfiles(username, dest, hostname=None):
+def stop():
+    global _stop_flag
+
+    _stop_flag = True
+
+
+def copyuserfiles(dest, src=None, username=None, hostname=None):
     """ Copies the files from the profile folder of the defined username to
     the destination folder. All files and subfolders will be placed in a
     folder with the same name as the username.
@@ -449,6 +489,10 @@ def copyuserfiles(username, dest, hostname=None):
         The destination directory to copy the user files to.
 
     """
+
+    global _stop_flag
+
+    f_cnt = 0
 
     # Folders to copy over
     folders = [
@@ -467,60 +511,74 @@ def copyuserfiles(username, dest, hostname=None):
     ]
 
     # Change path for either remote or local
-    for folder in folders:
-        if hostname:
-            folders[folders.index(folder)] = (
-                '\\\\{}\\C$\\Users\\{}\\{}'.format(
-                    hostname, username, folder))
-        else:
-            folders[folders.index(folder)] = (
-                'C:\\Users\\{}\\{}'.format(username, folder))
+    while _stop_flag is False:
+        for folder in folders:
+            if hostname and not src:
+                folders[folders.index(folder)] = (
+                    '\\\\{}\\C$\\Users\\{}\\{}'.format(
+                        hostname, username, folder))
+            elif src and not hostname:
+                if (os.path.exists(src)):
+                    # If the src is actually a folder for a user
+                    username = os.path.basename(src)
+                    folders[folders.index(folder)] = (
+                        '{}\\{}'.format(
+                            src, folder))
+                else:
+                    logging.error('The source given was not for ' +
+                                  'a valid folder of a user.')
+                    sys.exit(1)
+            else:
+                folders[folders.index(folder)] = (
+                    'C:\\Users\\{}\\{}'.format(username, folder))
 
-    # Copy all paths in the folders array
-    for folder in folders:
-        path = os.path.abspath(folder)
-        dest = os.path.abspath(dest)
+        # Copy all paths in the folders array
+        for folder in folders:
+            f_cnt = f_cnt + 1
+            path = os.path.abspath(folder)
+            dest = os.path.abspath(dest)
 
-        newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
-                              dest + os.sep + '%s' % username)
+            newDst = path.replace(os.sep.join(path.split(os.sep)[:3]),
+                                  dest + os.sep + '%s' % username)
 
-        # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
-        if 'Outlook' in path and 'Local' in path:
-            for f in _findfile('*.pst', path):
-                _copyall(f, os.path.join(newDst, f))
+            # Copy Outlook folders in %APPDATA%/Local/Microsoft/Outlook
+            if 'Outlook' in path and 'Local' in path:
+                for f in _findfile('*.pst', path):
+                    _copyall(f, os.path.join(newDst, f))
 
-        # Copy Outlook folders in %APPDATA%/Roaming/Microsoft/Outlook
-        elif ('Outlook' in path and
-              'RoamCache' not in path and
-              'Roaming' in path):
-            for f in _findfile('*.nk2', path):
-                _copyall(f, os.path.join(newDst, f))
+            # Copy Outlook folders in %APPDATA%/Roaming/Microsoft/Outlook
+            elif ('Outlook' in path and
+                  'RoamCache' not in path and
+                  'Roaming' in path):
+                for f in _findfile('*.nk2', path):
+                    _copyall(f, os.path.join(newDst, f))
 
-        else:
-            _copyall(path, newDst)
+            else:
+                _copyall(path, newDst)
 
+        if len(folders) == f_cnt:
+            break
 
 if __name__ == '__main__':
     try:
-        logging.info('****************************************************')
-        logging.info('SCRIPT STARTED')
-        logging.info('****************************************************')
-        logging.info('* This script does not copy anything ' +
-                     'from the downloads folder. *')
-        logging.info('Arguments: {}'.format(
-            argp.parse_known_args(sys.argv[1:])))
-        host = getHostname()
-        setDocsLoc(hostname=host,
-                   documents_location=getDocsLoc())
-        copyuserfiles(username=getUserName(),
-                      dest=getUserDestDir(),
-                      hostname=host)
-        logging.info('****************************************************')
-        logging.info('SCRIPT STOPPED')
-        logging.info('****************************************************')
+        if is_admin():
+            logging.info('User is admin!')
+            logging.info('* This script does not copy anything ' +
+                        'from the downloads folder. *')
+            logging.info('Arguments: {}'.format(
+                argp.parse_known_args(sys.argv[1:])))
+            host = getHostname()
+            setDocsLoc(hostname=host,
+                    documents_location=getDocsLoc())
+            copyuserfiles(username=getUserName(),
+                        dest=getUserDestDir(),
+                        hostname=host)
+        else:
+            logging.error('User is not admin! Prompting UAC elevation...')
+            ctypes.windll.shell32.ShellExecuteW(None, 'runas', sys.executable,
+                                                __file__, None, 1)
     except (KeyboardInterrupt,
             SystemError,
             SystemExit) as err:
         logging.error("Stopped the script!", exc_info=True)
-        logging.info('****************************************************')
         quit()

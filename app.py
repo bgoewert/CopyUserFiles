@@ -20,16 +20,21 @@
 # SOFTWARE.
 # -----------------------------------------------------------------------------
 
-import copyuserfiles as cuf
-from hostnameselect import HostnameSelect
-from usernameselect import UsernameSelect
 import os
 import tkinter as tk
 import tkinter.filedialog as tkFileDialog
 import tkinter.simpledialog as tkSimpleDialog
 import logging
 import sys
+import ctypes
+import platform
+import time
+import subprocess
+import copyuserfiles as cuf
+from hostnameselect import HostnameSelect
+from usernameselect import UsernameSelect
 
+# tkinter root vars
 root = tk.Tk()
 root.title('Copy User Files')
 root.geometry('720x540')
@@ -49,13 +54,24 @@ str_docs_loc = tk.StringVar()
 bool_copy_downloads = tk.BooleanVar()
 bool_documents_loc = tk.BooleanVar()
 
+# ldap vars
 host = HostnameSelect(root)
 
 
+# Checks to see if user is administrator
+def is_admin():
+    logging.info('Checking user privledges...')
+    try:
+        # Requests administrator permission for the python script
+        logging.info('Checking if user is admin...')
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        logging.info('User is not admin!')
+        return False
+
+
 def cmd_select_dir(str_var):
-    """ Opens a file dialog to select a source directory.
-    - str_src_dir = tkinter.StringVar() variable
-    """
+    """ Opens a file dialog to select a source directory."""
     str_var.set(tkFileDialog.askdirectory())
 
 
@@ -72,6 +88,21 @@ def cmd_select_hostname(frame):
 
 def cmd_select_username(frame):
     UsernameSelect(frame, str_username, str_hostname.get())
+
+
+def cmd_start():
+    """ try:
+        start = subprocess.call(['py', 'copyuserfiles.py',
+                                 '-u', os.path.basename(str_src_dir.get()),
+                                 '-d', str_dest_dir.get(),
+                                 '-H', str_hostname.get(),
+                                 '-D', str_docs_loc.get()])
+    except:
+        logging.exception('Unable to run subprocess') """
+    cuf.copyuserfiles(str_dest_dir.get(),
+                      str_src_dir.get(),
+                      str_username.get(),
+                      str_hostname.get())
 
 
 def dir_select_label_group(frame):
@@ -91,24 +122,25 @@ def dir_select_label_group(frame):
     rm_host_btn.grid(row=0, column=0, sticky='we')
 
     # Username
-    src_dir_label = tk.Label(grp_dirs, text='Username: ', )
-    src_dir_entry = tk.Entry(grp_dirs, textvariable=str_username)
-    src_dir_btn = tk.Button(grp_dirs,
-                            text='Select Username',
-                            command=lambda: cmd_select_username(frame))
-    src_dir_label.grid(row=1, column=1, sticky='e')
-    src_dir_entry.grid(row=1, column=2, columnspan=2, sticky='we', padx=(0, 5))
-    src_dir_btn.grid(row=1, column=0, sticky='we')
+    username_label = tk.Label(grp_dirs, text='Username: ', )
+    username_entry = tk.Entry(grp_dirs, textvariable=str_username)
+    username_btn = tk.Button(grp_dirs,
+                             text='Select Username',
+                             command=lambda: cmd_select_username(frame))
+    username_label.grid(row=1, column=1, sticky='e')
+    username_entry.grid(row=1, column=2, columnspan=2,
+                        sticky='we', padx=(0, 5))
+    username_btn.grid(row=1, column=0, sticky='we')
 
     # Source directory
-    """ src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
+    src_dir_label = tk.Label(grp_dirs, text='Source Directory: ', )
     src_dir_entry = tk.Entry(grp_dirs, textvariable=str_src_dir)
     src_dir_btn = tk.Button(grp_dirs,
                             text='Select Source',
                             command=lambda: cmd_select_dir(str_src_dir))
-    src_dir_label.grid(row=0, column=1, sticky='e')
-    src_dir_entry.grid(row=0, column=2, columnspan=2, sticky='we', padx=(0, 5))
-    src_dir_btn.grid(row=0, column=0, sticky='we') """
+    src_dir_label.grid(row=2, column=1, sticky='e')
+    src_dir_entry.grid(row=2, column=2, columnspan=2, sticky='we', padx=(0, 5))
+    src_dir_btn.grid(row=2, column=0, sticky='we')
 
     # Destination directory
     dest_dir_label = tk.Label(grp_dirs, text='Destination Directory: ', )
@@ -116,10 +148,10 @@ def dir_select_label_group(frame):
     dest_dir_btn = tk.Button(grp_dirs,
                              text='Select Destintation',
                              command=lambda: cmd_select_dir(str_dest_dir))
-    dest_dir_label.grid(row=2, column=1, sticky='e')
-    dest_dir_entry.grid(row=2, column=2, columnspan=2, sticky='we',
+    dest_dir_label.grid(row=3, column=1, sticky='e')
+    dest_dir_entry.grid(row=3, column=2, columnspan=2, sticky='we',
                         padx=(0, 5))
-    dest_dir_btn.grid(row=2, column=0, sticky='we')
+    dest_dir_btn.grid(row=3, column=0, sticky='we')
 
 
 def remote_actions_label_group(frame):
@@ -138,7 +170,7 @@ def remote_actions_label_group(frame):
     # Remote documents folder location checkbox
     chk_documents_loc = tk.Checkbutton(grp_remote,
                                        text='Set remote documents folder' +
-                                            ' location',
+                                       ' location',
                                        variable=bool_documents_loc,
                                        command=lambda:
                                        grp_remote_actions.grid() if
@@ -150,18 +182,20 @@ def remote_actions_label_group(frame):
                            padx=(1, 15))
 
     # Remote hostname entry
-    """ rm_host_label = tk.Label(grp_remote_actions, text='Remote Hostname: ', )
+    """
+    rm_host_label = tk.Label(grp_remote_actions, text='Remote Hostname: ', )
     rm_host_entry = tk.Entry(grp_remote_actions, textvariable=str_hostname)
     rm_host_btn = tk.Button(grp_remote_actions,
                             text='Remote Hosts',
                             command=lambda: cmd_select_hostname(frame))
     rm_host_label.grid(row=0, column=0, sticky='e')
     rm_host_entry.grid(row=0, column=1, sticky='we')
-    rm_host_btn.grid(row=0, column=2, sticky='we') """
+    rm_host_btn.grid(row=0, column=2, sticky='we')
+    """
 
     # Remote documents folder target location entry
     rm_docs_label = tk.Label(grp_remote_actions, text='Documents ' +
-                                                      'Target Location: ', )
+                             'Target Location: ', )
     rm_docs_entry = tk.Entry(grp_remote_actions, textvariable=str_docs_loc)
     rm_docs_label.grid(row=1, column=0, sticky='e')
     rm_docs_entry.grid(row=1, column=1, sticky='we')
@@ -180,22 +214,21 @@ def action_label_group(frame):
                           bg='#209920',
                           width=5)
     btn_start.bind('<Button-1>',
-                   lambda e: cuf.copyuserfiles(str_username.get(),
-                                               str_dest_dir.get(),
-                                               str_hostname.get()))
+                   lambda e: cmd_start())
     btn_start.grid(row=0, column=0, sticky='we')
 
     # Stop button
     btn_stop = tk.Button(grp_actions,
                          text='Stop',
                          bg='#aa2020',
-                         width=5)
+                         width=5,
+                         command=cuf.stop)
     btn_stop.grid(row=0, column=1, sticky='we')
 
     # Copy Downloads checkbox
     chk_copy_downloads = tk.Checkbutton(grp_actions,
                                         text='Copy Downloads Folder (Limited' +
-                                             ' to 50 most recent files)',
+                                        ' to 50 most recent files)',
                                         variable=bool_copy_downloads)
     chk_copy_downloads.grid(row=0, column=2, sticky='w',
                             padx=(15, 15))
@@ -252,16 +285,63 @@ def footer():
     fra_footer.pack(side='bottom')
 
 
+def check_python():
+    if sys.version_info[0] is 3:
+        logging.info('Running correct version of python!')
+    else:
+        logging.warning('Running older version of python!')
+        logging.warning('Some features might not work with older versions!')
+
+
+def init():
+    logging.info('Started application at: ' + time.ctime())
+    logging.info('-===========- [ INIT ] -===========-')
+    logging.info('-==- [ SYS INFO ] -==-')
+    logging.info('system    : ' + platform.system())
+    logging.info('release   : ' + platform.release())
+    logging.info('version   : ' + platform.version())
+    logging.info('node      : ' + platform.node())
+    logging.info('machine   : ' + platform.machine())
+    logging.info('processor : ' + platform.processor())
+    logging.info('-==- [ SYS INFO ] -==-')
+    logging.info('-==- [ APP INFO ] -==-')
+    logging.info('python    : ' + platform.python_version())
+    logging.info('version   : ' + cuf.__version__)
+    logging.info('-==- [ APP INFO ] -==-')
+    check_python()
+    if is_admin():
+        logging.info('User is admin! Proceeding through the application...')
+        logging.info('-===========- [ INIT ] -===========-')
+        main()
+    else:
+        logging.error('User is not admin! Prompting UAC elevation...')
+        logging.error('This will restart the application!')
+        logging.error('Stopped application at: ' + time.ctime())
+        logging.info('-===========- [ INIT ] -===========-')
+        ctypes.windll.shell32.ShellExecuteW(None, 'runas', sys.executable,
+                                            __file__, None, 1)
+
+
 def app():
     """ The main UI and application """
 
     header()
+    logging.info('Header created!')
 
     body()
+    logging.info('Body created!')
 
     footer()
+    logging.info('Footer created!')
+
+
+def main():
+    """Main guts for the application and the process that keeps it alive"""
+    logging.info('Starting GUI...')
+    app()
+    logging.info('GUI started!')
+    root.mainloop()
 
 
 if __name__ == "__main__":
-    app()
-    root.mainloop()
+    init()

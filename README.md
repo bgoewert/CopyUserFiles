@@ -34,7 +34,6 @@ dependencies to build the executable.
 > pyinstaller --onefile opyuserfiles.py
 ```
 
-
 #### GUI
 ```shell
 > pip install -r requirements.txt
