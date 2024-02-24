@@ -2,6 +2,14 @@
 
 [![Build Status](https://travis-ci.org/bgogurt/CopyUserFiles.svg?branch=master)](https://travis-ci.org/bgogurt/CopyUserFiles)
 
+## Deprecated!
+
+> This project has been out of date for some time and is no longer being used. I currently do not have time to keep updated.
+> 
+> Brennan 2024-02-24
+
+## Description
+
 This was made to copy important files and folders from a Windows user profile to be used on another Windows computer.
 
 PyInstaller was chosen to be used to freeze everything into a distributable package. Using this executable *does not* require Python to be installed on a user's computer. For more information on how to use it, visit the [PyInstaller Documentation](https://pyinstaller.readthedocs.io/en/stable)
